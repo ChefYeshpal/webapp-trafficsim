@@ -37,6 +37,25 @@ p {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
+/* Pause button */
+#pauseBtn {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 50;
+    padding: 8px 12px;
+    font-size: 14px;
+    background: #111827;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#pauseBtn[aria-pressed="true"] {
+    background: #ef4444;
+}
+
 /* Roads */
 .road {
     position: absolute;
