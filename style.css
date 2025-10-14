@@ -35,6 +35,7 @@ p {
     margin: 0 auto;
     border-radius: 10px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    overflow: hidden; /* ensure cars are visible only inside this box */
 }
 
 /* Pause button */

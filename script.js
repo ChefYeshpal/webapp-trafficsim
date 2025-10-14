@@ -45,30 +45,30 @@ const carColors = [
 // Direction configurations
 const directionConfigs = {
     east: {
-        startPos: { left: -50, top: 250 },
+        startPos: { left: 10, top: 250 },
         stopPos: { left: 180, top: 250 },
-        endPos: { left: 650, top: 250 },
+        endPos: { left: 590, top: 250 },
         rotation: 0,
         axis: 'left'
     },
     west: {
-        startPos: { left: 650, top: 325 },
+        startPos: { left: 590, top: 325 },
         stopPos: { left: 390, top: 325 },
-        endPos: { left: -50, top: 325 },
+        endPos: { left: 10, top: 325 },
         rotation: 0,
         axis: 'left'
     },
     north: {
-        startPos: { left: 260, top: -50 },
+        startPos: { left: 260, top: 10 },
         stopPos: { left: 260, top: 180 },
-        endPos: { left: 260, top: 650 },
+        endPos: { left: 260, top: 590 },
         rotation: 90,
         axis: 'top'
     },
     south: {
-        startPos: { left: 300, top: 650 },
+        startPos: { left: 300, top: 590 },
         stopPos: { left: 300, top: 390 },
-        endPos: { left: 300, top: -50 },
+        endPos: { left: 300, top: 10 },
         rotation: 90,
         axis: 'top'
     }
@@ -86,13 +86,18 @@ function getRandomDirection() {
 }
 
 // Create a new car
-function spawnCar() {
-    const direction = getRandomDirection();
+// Create a new car (optionally specify direction)
+function spawnCar(direction = null) {
+    const dir = direction || getRandomDirection();
 
-    // Respect per-lane spawn allowance
-    if (!laneAllowedToSpawn[direction]) return null;
+    // Respect per-lane spawn allowance and max capacity
+    if (!laneAllowedToSpawn[dir]) return null;
+    if (lanes[dir].length >= 6) {
+        laneAllowedToSpawn[dir] = false;
+        return null;
+    }
 
-    const config = directionConfigs[direction];
+    const config = directionConfigs[dir];
     const color = getRandomColor();
     const id = `car-${carIdCounter++}`;
     
@@ -105,13 +110,15 @@ function spawnCar() {
     carElement.style.top = config.startPos.top + 'px';
     carElement.style.transform = `rotate(${config.rotation}deg)`;
     
-    document.querySelector('.intersection-container').appendChild(carElement);
+    const container = document.querySelector('.intersection-container');
+    if (!container) return null;
+    container.appendChild(carElement);
     
     // Create car object
     const car = {
         id: id,
         element: carElement,
-        direction: direction,
+        direction: dir,
         config: config,
         position: config.axis === 'left' ? config.startPos.left : config.startPos.top,
         speed: 1 + Math.random() * 1, // Random speed between 1-2
@@ -120,8 +127,8 @@ function spawnCar() {
     };
     
     cars.push(car);
-    lanes[direction].push(car);
-    updateLaneSpawnFlag(direction);
+    lanes[dir].push(car);
+    updateLaneSpawnFlag(dir);
     return car;
 }
 
@@ -232,23 +239,24 @@ function moveCars() {
                 car.position = proposedPos;
             }
 
-            // Update visual position
+            // Clamp visual position to intersection container (0..600)
+            const containerMin = 0;
+            const containerMax = 600;
             if (car.config.axis === 'left') {
+                // Ensure car stays inside horizontal bounds
+                car.position = Math.max(containerMin, Math.min(containerMax - 40, car.position)); // 40 = car width
                 car.element.style.left = car.position + 'px';
             } else {
+                // Ensure car stays inside vertical bounds
+                car.position = Math.max(containerMin, Math.min(containerMax - 25, car.position)); // 25 = car height
                 car.element.style.top = car.position + 'px';
             }
 
-            // Remove car if it's off screen
-            const endPos = car.config.axis === 'left' ? car.config.endPos.left : car.config.endPos.top;
-            if (car.direction === 'east' || car.direction === 'north') {
-                if (car.position > endPos + 200) {
-                    removeCar(car);
-                }
-            } else {
-                if (car.position < endPos - 200) {
-                    removeCar(car);
-                }
+            // Remove car if it's completely outside the container area (failsafe)
+            if (car.position <= containerMin || car.position >= containerMax) {
+                // Keep cars inside — but if something went wrong, remove as failsafe
+                // We'll only remove if the car is stuck exactly at an extreme and there are many cars.
+                if (lanes[car.direction].length > 8) removeCar(car);
             }
         }
     });
@@ -290,7 +298,8 @@ function toggleLight(direction) {
 
 // Game loop
 function gameLoop() {
-    moveCars();
+    if (!isPaused) moveCars();
+    // always schedule next frame to keep responsiveness for resume
     requestAnimationFrame(gameLoop);
 }
 
@@ -304,37 +313,11 @@ function startCarSpawning() {
         if (Math.random() < 0.8) {
             // Choose a direction but prefer allowed lanes
             const directions = ['north', 'south', 'east', 'west'];
-            // Filter allowed lanes
-            const allowed = directions.filter(d => laneAllowedToSpawn[d]);
-            const pool = allowed.length ? allowed : directions; // fallback if none allowed
-            const dir = pool[Math.floor(Math.random() * pool.length)];
-            // spawn in that direction specifically
-            const prevRandomDirection = getRandomDirection;
-            // temporarily override getRandomDirection behaviour by directly constructing car
-            const config = directionConfigs[dir];
-            const color = getRandomColor();
-            const id = `car-${carIdCounter++}`;
-            const carElement = document.createElement('div');
-            carElement.className = 'car';
-            carElement.id = id;
-            carElement.style.background = color;
-            carElement.style.left = config.startPos.left + 'px';
-            carElement.style.top = config.startPos.top + 'px';
-            carElement.style.transform = `rotate(${config.rotation}deg)`;
-            document.querySelector('.intersection-container').appendChild(carElement);
-            const car = {
-                id: id,
-                element: carElement,
-                direction: dir,
-                config: config,
-                position: config.axis === 'left' ? config.startPos.left : config.startPos.top,
-                speed: 1 + Math.random() * 1,
-                stopped: false,
-                desiredGap: 50
-            };
-            cars.push(car);
-            lanes[dir].push(car);
-            updateLaneSpawnFlag(dir);
+            const allowed = directions.filter(d => laneAllowedToSpawn[d] && lanes[d].length < 6);
+            const pool = allowed.length ? allowed : directions.filter(d => lanes[d].length < 6);
+            const poolFinal = pool.length ? pool : directions; // fallback
+            const dir = poolFinal[Math.floor(Math.random() * poolFinal.length)];
+            spawnCar(dir);
         }
     }, 2000);
 }
@@ -346,12 +329,12 @@ gameLoop();
 
 // Pause/resume button wiring
 const pauseBtn = document.getElementById('pauseBtn');
-pauseBtn.addEventListener('click', () => {
-    isPaused = !isPaused;
-    pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
-    pauseBtn.setAttribute('aria-pressed', isPaused ? 'true' : 'false');
-    if (!isPaused) {
-        // resume any necessary timers (spawning is already skipping when isPaused)
-    }
-});
+if (pauseBtn) {
+    pauseBtn.addEventListener('click', () => {
+        isPaused = !isPaused;
+        pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+        pauseBtn.setAttribute('aria-pressed', isPaused ? 'true' : 'false');
+        // spawning checks isPaused, so no extra handling needed for timers
+    });
+}
 
