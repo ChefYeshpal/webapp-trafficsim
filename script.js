@@ -262,6 +262,7 @@ function updateLaneSpawnFlag(direction) {
     } else if (count <= 3) {
         laneAllowedToSpawn[direction] = true;
     }
+}
 
 // Initialize traffic lights on page load
 function initializeTrafficLights() {
