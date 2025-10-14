@@ -1,20 +1,44 @@
-<!DOCTYPE htML>
+<!DOCTYPE html>
 <html lang="en">
+<head>
     <meta charset="UTF-8">
-    <title>Traffic light simulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Light Simulator</title>
     <link rel="stylesheet" href="style.css">
-    <head>
-        <body>
-            <div class="road">
-                <div class="car" id="car1"></div>
-                <div class="traffic-light">
-                    <div class="light-red" id="red"></div>
-                    <div class="light-yellow" id="yellow"></div>
-                    <div class="light-green" id="green"></div>
-                </div>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Traffic Control Game</h1>
+        <p>Click on traffic lights to toggle them. Red = Stop, Green = Go!</p>
+        
+        <div class="intersection-container">
+            <!-- Horizontal Road -->
+            <div class="road horizontal"></div>
+            
+            <!-- Vertical Road -->
+            <div class="road vertical"></div>
+            
+            <!-- Intersection Box -->
+            <div class="intersection"></div>
+            
+            <!-- Traffic Lights -->
+            <div class="traffic-light north" data-direction="north" onclick="toggleLight('north')">
+                <div class="light"></div>
             </div>
-            <button onclick="changelight()">Change Light</button>
-            <script src="script.js"></script>
-        </body>
-    </head>
+            <div class="traffic-light south" data-direction="south" onclick="toggleLight('south')">
+                <div class="light"></div>
+            </div>
+            <div class="traffic-light east" data-direction="east" onclick="toggleLight('east')">
+                <div class="light"></div>
+            </div>
+            <div class="traffic-light west" data-direction="west" onclick="toggleLight('west')">
+                <div class="light"></div>
+            </div>
+            
+            <!-- Cars will be dynamically added here -->
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
 </html>
