@@ -157,7 +157,7 @@ function removeCar(car) {
 }
 
 // Check if car should stop at intersection
-function shouldStop(car) {
+function shouldStop(car, predictedSpeed = null) {
     const lightState = trafficLights[car.direction];
     const stopPosition = car.config.axis === 'left' ? car.config.stopPos.left : car.config.stopPos.top;
     
@@ -165,18 +165,19 @@ function shouldStop(car) {
     if (lightState === 'red') {
         const axis = car.config.axis;
         const currentPos = car.position;
+        const speedToUse = predictedSpeed !== null ? predictedSpeed : (car.currentSpeed || car.speed || 0);
         
-        // Check if car is approaching the stop line
+        // Check if car is approaching the stop line (using predicted speed)
         if (axis === 'left') {
-            if (car.direction === 'east' && currentPos < stopPosition && currentPos + car.speed >= stopPosition) {
+            if (car.direction === 'east' && currentPos < stopPosition && currentPos + speedToUse >= stopPosition) {
                 return true;
-            } else if (car.direction === 'west' && currentPos > stopPosition && currentPos - car.speed <= stopPosition) {
+            } else if (car.direction === 'west' && currentPos > stopPosition && currentPos - speedToUse <= stopPosition) {
                 return true;
             }
         } else { // axis === 'top'
-            if (car.direction === 'south' && currentPos > stopPosition && currentPos - car.speed <= stopPosition) {
+            if (car.direction === 'south' && currentPos > stopPosition && currentPos - speedToUse <= stopPosition) {
                 return true;
-            } else if (car.direction === 'north' && currentPos < stopPosition && currentPos + car.speed >= stopPosition) {
+            } else if (car.direction === 'north' && currentPos < stopPosition && currentPos + speedToUse >= stopPosition) {
                 return true;
             }
         }
@@ -294,8 +295,8 @@ function moveCars() {
 
             // Fade-out near end and removal
             const endPos = car.config.axis === 'left' ? car.config.endPos.left : car.config.endPos.top;
-            const removalMargin = 60; // px beyond container edge
-            const fadeDistance = 40; // start fading this many px before the end
+            const removalMargin = 20; // px beyond container edge as a safety
+            const fadeDistance = 100; // start fading this many px before the end (larger -> fades earlier)
             // distance to end along travel direction (positive when approaching before end)
             let distToEnd;
             if (car.direction === 'east' || car.direction === 'north') {
@@ -304,18 +305,22 @@ function moveCars() {
                 distToEnd = car.position - endPos;
             }
 
-            // Compute opacity
+            // Compute opacity: fade from 1 -> 0 as distToEnd goes from fadeDistance -> 0
             let opacity = 1;
-            if (distToEnd <= fadeDistance && distToEnd >= 0) {
+            if (distToEnd >= fadeDistance) {
+                opacity = 1;
+            } else if (distToEnd > 0 && distToEnd < fadeDistance) {
                 opacity = Math.max(0, distToEnd / fadeDistance);
-            } else if (distToEnd < 0) {
-                // already passed end, fade out based on how far past end relative to removalMargin
-                const passed = Math.abs(distToEnd);
-                opacity = Math.max(0, 1 - (passed / removalMargin));
+            } else if (distToEnd <= 0) {
+                // already at or past the end: fully faded
+                opacity = 0;
             }
             car.element.style.opacity = opacity.toString();
 
-            if ((car.direction === 'east' || car.direction === 'north') && car.position > endPos + removalMargin) {
+            // Remove car when fully faded (opacity 0) or if it goes well past the end as a failsafe
+            if (opacity <= 0) {
+                removeCar(car);
+            } else if ((car.direction === 'east' || car.direction === 'north') && car.position > endPos + removalMargin) {
                 removeCar(car);
             } else if ((car.direction === 'west' || car.direction === 'south') && car.position < endPos - removalMargin) {
                 removeCar(car);
@@ -323,6 +328,8 @@ function moveCars() {
         }
     });
 }
+
+// (viewport-scaling removed — game uses fixed layout; fade-out behavior remains)
 
 // Update whether a lane is allowed to spawn based on count and hysteresis
 function updateLaneSpawnFlag(direction) {
