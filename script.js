@@ -137,95 +137,6 @@ function shouldStop(car) {
     return false;
 }
 
-// Prevent cars from overlapping by stopping them a few pixels before the car in front
-function preventCarOverlap() {
-    const carGroups = cars.reduce((groups, car) => {
-        if (!groups[car.direction]) {
-            groups[car.direction] = [];
-        }
-        groups[car.direction].push(car);
-        return groups;
-    }, {});
-
-    for (const direction in carGroups) {
-        const group = carGroups[direction];
-        const config = directionConfigs[direction];
-        const axis = config.axis;
-
-        // Sort cars based on their position in the direction of movement
-        group.sort((a, b) => (a.position - b.position) * (direction === 'east' || direction === 'south' ? 1 : -1));
-
-        let carsAtSignal = 0; // Counter for cars at the signal
-
-        for (let i = 0; i < group.length; i++) {
-            const currentCar = group[i];
-            const frontCar = group[i - 1]; // Car in front
-
-            // Check if the car should stop at the signal
-            const stopPosition = config.axis === 'left' ? config.stopPos.left - 10 : config.stopPos.top - 10; // Stop 10px before the signal
-            const lightState = trafficLights[direction];
-
-            if (lightState === 'red' && i === 0) {
-                // First car in the lane stops at the signal
-                if ((direction === 'east' || direction === 'north') && currentCar.position + currentCar.speed >= stopPosition) {
-                    currentCar.stopped = true;
-                    currentCar.position = stopPosition;
-                    carsAtSignal++;
-                } else if ((direction === 'west' || direction === 'south') && currentCar.position - currentCar.speed <= stopPosition) {
-                    currentCar.stopped = true;
-                    currentCar.position = stopPosition;
-                    carsAtSignal++;
-                } else {
-                    currentCar.stopped = false;
-                }
-            }
-
-            if (i > 0) {
-                // Cars stop behind the car in front
-                const distance = Math.abs(currentCar.position - frontCar.position);
-
-                if (distance < 50 || frontCar.stopped) { // Minimum gap of 50px or if the front car is stopped
-                    currentCar.stopped = true;
-                    currentCar.position = frontCar.position - (direction === 'east' || direction === 'south' ? 50 : -50);
-                } else {
-                    currentCar.stopped = false;
-                }
-            }
-
-            // Enforce a maximum of 5 cars at the signal
-            if (lightState === 'red' && carsAtSignal >= 5) {
-                removeCar(currentCar);
-            }
-        }
-    }
-}
-
-// Enforce a maximum of 5 cars per lane
-function enforceMaxCarsPerLane() {
-    const carGroups = cars.reduce((groups, car) => {
-        if (!groups[car.direction]) {
-            groups[car.direction] = [];
-        }
-        groups[car.direction].push(car);
-        return groups;
-    }, {});
-
-    for (const direction in carGroups) {
-        const group = carGroups[direction];
-        const config = directionConfigs[direction];
-        const axis = config.axis;
-
-        // Sort cars based on their position in the direction of movement
-        group.sort((a, b) => (a.position - b.position) * (direction === 'east' || direction === 'south' ? 1 : -1));
-
-        // Remove excess cars beyond the maximum allowed
-        while (group.length > 5) {
-            const carToRemove = group.shift(); // Remove the car furthest off-screen
-            removeCar(carToRemove);
-        }
-    }
-}
-
 // Move all cars
 function moveCars() {
     cars.forEach(car => {
@@ -266,45 +177,6 @@ function moveCars() {
     });
 }
 
-// Limit the number of cars piling up off-screen
-function limitOffScreenPileup() {
-    const carGroups = cars.reduce((groups, car) => {
-        if (!groups[car.direction]) {
-            groups[car.direction] = [];
-        }
-        groups[car.direction].push(car);
-        return groups;
-    }, {});
-
-    for (const direction in carGroups) {
-        const group = carGroups[direction];
-        const config = directionConfigs[direction];
-        const axis = config.axis;
-
-        // Sort cars based on their position in the direction of movement
-        group.sort((a, b) => (a.position - b.position) * (direction === 'east' || direction === 'south' ? 1 : -1));
-
-        // Remove excess cars off-screen
-        const maxOffScreenCars = 3; // Allow up to 3 cars off-screen
-        let offScreenCount = 0;
-
-        for (let i = 0; i < group.length; i++) {
-            const car = group[i];
-            const isOffScreen = (direction === 'east' && car.position < config.startPos.left) ||
-                                (direction === 'west' && car.position > config.startPos.left) ||
-                                (direction === 'north' && car.position < config.startPos.top) ||
-                                (direction === 'south' && car.position > config.startPos.top);
-
-            if (isOffScreen) {
-                offScreenCount++;
-                if (offScreenCount > maxOffScreenCars) {
-                    removeCar(car);
-                }
-            }
-        }
-    }
-}
-
 // Initialize traffic lights on page load
 function initializeTrafficLights() {
     for (const direction in trafficLights) {
@@ -331,8 +203,6 @@ function toggleLight(direction) {
 
 // Game loop
 function gameLoop() {
-    preventCarOverlap();
-    enforceMaxCarsPerLane();
     moveCars();
     requestAnimationFrame(gameLoop);
 }
