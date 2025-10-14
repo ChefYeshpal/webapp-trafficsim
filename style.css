@@ -1,49 +1,147 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
-    background: #e3e3e3;
+    background: #2c3e50;
+    font-family: Arial, sans-serif;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
 }
 
-.road {
+.game-container {
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+p {
+    margin-bottom: 30px;
+    color: #bdc3c7;
+}
+
+.intersection-container {
     position: relative;
-    width: 400px;
-    height: 150px;
-    margin: 40px auto;
-    border-radius: 8px;
+    width: 600px;
+    height: 600px;
+    background: #34495e;
+    margin: 0 auto;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-.car {
+/* Roads */
+.road {
     position: absolute;
-    left: 30px;
-    top: 60px;
-    width: 40px;
-    height: 20px;
-    background: #2196f3;
-    border-radius: 3px;
+    background: #555;
 }
 
+.road.horizontal {
+    width: 600px;
+    height: 120px;
+    top: 240px;
+    left: 0;
+    border-top: 3px dashed #f39c12;
+    border-bottom: 3px dashed #f39c12;
+}
+
+.road.vertical {
+    width: 120px;
+    height: 600px;
+    left: 240px;
+    top: 0;
+    border-left: 3px dashed #f39c12;
+    border-right: 3px dashed #f39c12;
+}
+
+/* Intersection */
+.intersection {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    top: 240px;
+    left: 240px;
+    background: #666;
+    border: 3px solid #f39c12;
+}
+
+/* Traffic Lights */
 .traffic-light {
     position: absolute;
-    right: 30px;
-    top: 40px;
-    width: 20px;
-    height: 100px;
+    width: 30px;
+    height: 50px;
     background: #222;
-    border-radius: 4px;
+    border-radius: 5px;
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 8px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s;
+    z-index: 10;
 }
 
-.light {
-    width: 36px;
-    height: 36px;
+.traffic-light:hover {
+    transform: scale(1.1);
+}
+
+.traffic-light .light {
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    margin: 0 auto;
-    background: #555;
-    opacity: 0.3;
-    border: 2px solid #111;
+    background: #4ade80;
+    box-shadow: 0 0 10px rgba(74, 222, 128, 0.8);
 }
 
-.red.active { background: red; opacity: 1; }
-.yellow.active { background: yellow; opacity: 1; }
-.green.active { background: green; opacity: 1; }
+.traffic-light.red .light {
+    background: #ef4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+}
+
+/* Traffic light positions */
+.traffic-light.north {
+    top: 210px;
+    left: 285px;
+}
+
+.traffic-light.south {
+    top: 340px;
+    left: 285px;
+}
+
+.traffic-light.east {
+    top: 275px;
+    left: 370px;
+}
+
+.traffic-light.west {
+    top: 275px;
+    left: 200px;
+}
+
+/* Cars */
+.car {
+    position: absolute;
+    width: 40px;
+    height: 25px;
+    border-radius: 5px;
+    transition: none; /* Remove transition for smoother continuous movement */
+    z-index: 5;
+}
+
+.car::before {
+    content: '';
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    top: 5px;
+    left: 12px;
+}
