@@ -7,8 +7,6 @@ Although, it will probably be much much simpler, with less logic involved as I c
 ## Things to do
 
 - Add roads
-- Add cars
-    - Maybe make a template or something, so that the computer itself can randomly select a colour for the cars. Otherwise it would just look like ants...
 - A traffic signal thing
     - Red and green will be there, the user will control the red and green lights
     - If the user makes a lane wait too long, then the drivers may crash into one another in an act of road rage
@@ -16,6 +14,15 @@ Although, it will probably be much much simpler, with less logic involved as I c
 
 ## Devlog
 
-- Created repository and coned
-- Updated README
-- Made the basic files (html, css, and js)
+- 14 Oct 2025
+    - Created repository and coned
+    - Updated README
+    - Made the basic files (html, css, and js)
+    - Added a game container
+        - Has the game play inside of it, I think it would make it simpler to code and all
+        - Added a pause button that stops the spawning of cars
+    - Updated car mechanics
+        - Cars spawn inside the game container, fading in from the edge
+        - Cars despawn just before hitting the container edge, fading out
+        - Cars are randomly spawned in at random intervals
+        - Cars can have random colours
