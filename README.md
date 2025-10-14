@@ -11,6 +11,12 @@ Although, it will probably be much much simpler, with less logic involved as I c
     - Red and green will be there, the user will control the red and green lights
     - If the user makes a lane wait too long, then the drivers may crash into one another in an act of road rage
     - Also, will need to add a system so that the crashed cars automatically get removed after some time (5secs)
+- Cars
+    - They should get indicators
+        - a left arrow means they wanna go to left
+        - a right arrow means they wanna go to right
+        - no special thing means they wanna go straight
+    - Should become rash the longer they wait
 
 ## Devlog
 
@@ -26,3 +32,4 @@ Although, it will probably be much much simpler, with less logic involved as I c
         - Cars despawn just before hitting the container edge, fading out
         - Cars are randomly spawned in at random intervals
         - Cars can have random colours
+    - Was trying to make it so that the entire square game window fits just inside the browser window, will need to look at how to do that tho...
