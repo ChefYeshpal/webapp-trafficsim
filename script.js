@@ -158,7 +158,14 @@ function removeCar(car) {
 
 // Check if car should stop at intersection
 function shouldStop(car, predictedSpeed = null) {
-    const lightState = trafficLights[car.direction];
+    // Cars heading north/south should observe the opposite signal (i.e., the light on the far side)
+    // north cars look at 'south' light, south cars look at 'north' light. East/west remain unchanged.
+    const observedLightForDirection = (dir => {
+        if (dir === 'north') return 'south';
+        if (dir === 'south') return 'north';
+        return dir;
+    })(car.direction);
+    const lightState = trafficLights[observedLightForDirection];
     const stopPosition = car.config.axis === 'left' ? car.config.stopPos.left : car.config.stopPos.top;
     
     // Red light means stop
