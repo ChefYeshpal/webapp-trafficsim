@@ -33,3 +33,5 @@ Although, it will probably be much much simpler, with less logic involved as I c
         - Cars are randomly spawned in at random intervals
         - Cars can have random colours
     - Was trying to make it so that the entire square game window fits just inside the browser window, will need to look at how to do that tho...
+- 15 Oct 2025
+    -
