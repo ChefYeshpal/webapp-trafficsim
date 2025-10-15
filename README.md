@@ -34,4 +34,4 @@ Although, it will probably be much much simpler, with less logic involved as I c
         - Cars can have random colours
     - Was trying to make it so that the entire square game window fits just inside the browser window, will need to look at how to do that tho...
 - 15 Oct 2025
-    -
+    - Fixed a lil game mechanic, cars look at the signal oppposite to them for go-nogo
