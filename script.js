@@ -78,6 +78,16 @@ const directionConfigs = {
     }
 };
 
+// Turn mapping: given current heading and intent, what exit direction to take
+const turnMap = {
+    north: { straight: 'south', left: 'east', right: 'west' },
+    south: { straight: 'north', left: 'west', right: 'east' },
+    east:  { straight: 'east',  left: 'north', right: 'south' },
+    west:  { straight: 'west',  left: 'south', right: 'north' }
+};
+
+const turnSymbols = { left: '←', right: '→', straight: '' };
+
 // Get random color
 function getRandomColor() {
     return carColors[Math.floor(Math.random() * carColors.length)];
@@ -130,6 +140,9 @@ function spawnCar(direction = null) {
         element: carElement,
         direction: dir,
         config: config,
+        turnIntent: null,
+        hasTurned: false,
+        indicator: null,
         position: config.axis === 'left' ? config.startPos.left : config.startPos.top,
         baseSpeed: baseSpeed,
         currentSpeed: 0,
@@ -138,6 +151,18 @@ function spawnCar(direction = null) {
         stopped: false,
         desiredGap: 50 // px gap to keep from car ahead
     };
+
+    // assign a random turn intent (weights: straight 60%, left 20%, right 20%)
+    const r = Math.random();
+    const intent = r < 0.6 ? 'straight' : (r < 0.8 ? 'left' : 'right');
+    car.turnIntent = intent;
+
+    // add small visual indicator on the car showing intended turn
+    const indicator = document.createElement('div');
+    indicator.className = `turn-indicator ${intent}`;
+    indicator.textContent = turnSymbols[intent];
+    carElement.appendChild(indicator);
+    car.indicator = indicator;
     
     cars.push(car);
     lanes[dir].push(car);
@@ -298,6 +323,45 @@ function moveCars() {
                 car.element.style.left = car.position + 'px';
             } else {
                 car.element.style.top = car.position + 'px';
+            }
+
+            // Turning logic: when car reaches the intersection center area, perform turn if intended
+            // We'll define the center box roughly as left: 240..360 and top: 240..360
+            if (!car.hasTurned) {
+                const centerMin = 240;
+                const centerMax = 360;
+                // compute car's current center coords
+                const carCenterX = parseFloat(car.element.style.left) + 20; // half width
+                const carCenterY = parseFloat(car.element.style.top) + 12.5; // half height
+
+                if (carCenterX >= centerMin && carCenterX <= centerMax && carCenterY >= centerMin && carCenterY <= centerMax) {
+                    // inside intersection: decide new exit direction
+                    const intent = car.turnIntent || 'straight';
+                    const newDir = (turnMap[car.direction] && turnMap[car.direction][intent]) || car.direction;
+                    if (newDir !== car.direction) {
+                        // remove from current lane tracking
+                        const oldLane = lanes[car.direction];
+                        const idx = oldLane.findIndex(c => c.id === car.id);
+                        if (idx !== -1) oldLane.splice(idx, 1);
+                        // update car's direction and config to the new direction
+                        car.direction = newDir;
+                        car.config = directionConfigs[newDir];
+                        // rotate visual to match new heading
+                        car.element.style.transform = `rotate(${car.config.rotation}deg)`;
+                        // mark turned so we don't repeat
+                        car.hasTurned = true;
+                        // update lane tracking for new direction
+                        lanes[newDir].push(car);
+                    } else {
+                        // straight: mark as turned so we don't re-evaluate
+                        car.hasTurned = true;
+                    }
+                    // update indicator to empty after turn
+                    if (car.indicator) {
+                        car.indicator.textContent = '';
+                        car.indicator.classList.remove('left', 'right');
+                    }
+                }
             }
 
             // Fade-out inside the container relative to the container edge
