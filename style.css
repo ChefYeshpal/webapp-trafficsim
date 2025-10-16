@@ -65,29 +65,41 @@ p {
 
 .road.horizontal {
     width: 600px;
-    height: 120px;
-    top: 240px;
+    height: 180px; /* Widened from 120px to 180px */
+    top: 210px; /* Adjusted from 240px */
     left: 0;
-    border-top: 3px dashed #f39c12;
-    border-bottom: 3px dashed #f39c12;
+    border-top: 3px solid #f39c12;
+    border-bottom: 3px solid #f39c12;
+    background: linear-gradient(to bottom, 
+        #555 0%, #555 42%, 
+        #f39c12 42%, #f39c12 46%, 
+        transparent 46%, transparent 54%,
+        #f39c12 54%, #f39c12 58%,
+        #555 58%, #555 100%);
 }
 
 .road.vertical {
-    width: 120px;
+    width: 180px; /* Widened from 120px to 180px */
     height: 600px;
-    left: 240px;
+    left: 210px; /* Adjusted from 240px */
     top: 0;
-    border-left: 3px dashed #f39c12;
-    border-right: 3px dashed #f39c12;
+    border-left: 3px solid #f39c12;
+    border-right: 3px solid #f39c12;
+    background: linear-gradient(to right,
+        #555 0%, #555 42%,
+        #f39c12 42%, #f39c12 46%,
+        transparent 46%, transparent 54%,
+        #f39c12 54%, #f39c12 58%,
+        #555 58%, #555 100%);
 }
 
 /* Intersection */
 .intersection {
     position: absolute;
-    width: 120px;
-    height: 120px;
-    top: 240px;
-    left: 240px;
+    width: 180px; /* Widened from 120px to 180px */
+    height: 180px; /* Widened from 120px to 180px */
+    top: 210px; /* Adjusted from 240px */
+    left: 210px; /* Adjusted from 240px */
     background: #666;
     border: 3px solid #f39c12;
 }
@@ -126,23 +138,23 @@ p {
 
 /* Traffic light positions */
 .traffic-light.north {
-    top: 210px;
+    top: 180px; /* Adjusted for wider roads */
     left: 285px;
 }
 
 .traffic-light.south {
-    top: 340px;
+    top: 370px; /* Adjusted for wider roads */
     left: 285px;
 }
 
 .traffic-light.east {
     top: 275px;
-    left: 370px;
+    left: 400px; /* Adjusted for wider roads */
 }
 
 .traffic-light.west {
     top: 275px;
-    left: 200px;
+    left: 170px; /* Adjusted for wider roads */
 }
 
 /* Cars */
@@ -151,7 +163,7 @@ p {
     width: 40px;
     height: 25px;
     border-radius: 5px;
-    transition: opacity 0.6s linear, transform 0.25s linear;
+    transition: opacity 0.6s linear, left 0.05s linear, top 0.05s linear;
     z-index: 5;
     pointer-events: none; /* cars are visual only; avoid accidental interactions outside bounds */
 }
@@ -165,4 +177,37 @@ p {
     border-radius: 2px;
     top: 5px;
     left: 12px;
+}
+
+/* Turn indicator arrows */
+.car::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+.car[data-turn="left"]::after {
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-right: 8px solid #fff;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+}
+
+.car[data-turn="right"]::after {
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 8px solid #fff;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+}
+
+.car[data-turn="straight"]::after {
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 8px solid #fff;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
 }
