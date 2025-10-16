@@ -42,41 +42,8 @@ const carColors = [
     'linear-gradient(135deg, #34495e, #2c3e50)', // dark blue
 ];
 
-// Direction configurations
-const directionConfigs = {
-    east: {
-        // spawn just inside left edge, exit just past right edge
-        startPos: { left: 10, top: 250 },
-        stopPos: { left: 180, top: 250 },
-        endPos: { left: 600, top: 250 },
-        rotation: 0,
-        axis: 'left'
-    },
-    west: {
-        // spawn just inside right edge, exit just past left edge
-        startPos: { left: 560, top: 325 },
-        stopPos: { left: 390, top: 325 },
-        endPos: { left: -40, top: 325 },
-        rotation: 0,
-        axis: 'left'
-    },
-    north: {
-        // spawn just inside top edge, exit just past bottom edge
-        startPos: { left: 260, top: 10 },
-        stopPos: { left: 260, top: 180 },
-        endPos: { left: 260, top: 600 },
-        rotation: 90,
-        axis: 'top'
-    },
-    south: {
-        // spawn just inside bottom edge, exit just past top edge
-        startPos: { left: 300, top: 560 },
-        stopPos: { left: 300, top: 390 },
-        endPos: { left: 300, top: -40 },
-        rotation: 90,
-        axis: 'top'
-    }
-};
+// Direction configurations are now in path.js as vehiclePaths
+const directionConfigs = vehiclePaths;
 
 // Get random color
 function getRandomColor() {
@@ -101,7 +68,7 @@ function spawnCar(direction = null) {
         return null;
     }
 
-    const config = directionConfigs[dir];
+    const config = vehiclePaths[dir];
     const color = getRandomColor();
     const id = `car-${carIdCounter++}`;
     
@@ -110,8 +77,8 @@ function spawnCar(direction = null) {
     carElement.className = 'car';
     carElement.id = id;
     carElement.style.background = color;
-    carElement.style.left = config.startPos.left + 'px';
-    carElement.style.top = config.startPos.top + 'px';
+    carElement.style.left = config.points[0].x + 'px';
+    carElement.style.top = config.points[0].y + 'px';
     carElement.style.transform = `rotate(${config.rotation}deg)`;
     
     const container = document.querySelector('.intersection-container');
@@ -128,7 +95,7 @@ function spawnCar(direction = null) {
         element: carElement,
         direction: dir,
         config: config,
-        position: config.axis === 'left' ? config.startPos.left : config.startPos.top,
+        position: config.axis === 'x' ? config.points[0].x : config.points[0].y,
         baseSpeed: baseSpeed,
         currentSpeed: 0,
         targetSpeed: baseSpeed,
@@ -144,8 +111,7 @@ function spawnCar(direction = null) {
         }
     };
     
-    // No longer need requestAnimationFrame for opacity change
-    // requestAnimationFrame(() => carElement.style.opacity = '1');
+    cars.push(car);
     lanes[dir].push(car);
     updateLaneSpawnFlag(dir);
     return car;
@@ -172,7 +138,7 @@ function shouldStop(car, predictedSpeed = null) {
         return dir;
     })(car.direction);
     const lightState = trafficLights[observedLightForDirection];
-    const stopPosition = car.config.axis === 'left' ? car.config.stopPos.left : car.config.stopPos.top;
+    const stopPosition = car.config.axis === 'x' ? car.config.stopPos.x : car.config.stopPos.y;
     
     // Red light means stop
     if (lightState === 'red') {
@@ -181,13 +147,13 @@ function shouldStop(car, predictedSpeed = null) {
         const speedToUse = predictedSpeed !== null ? predictedSpeed : (car.currentSpeed || car.speed || 0);
         
         // Check if car is approaching the stop line (using predicted speed)
-        if (axis === 'left') {
+        if (axis === 'x') {
             if (car.direction === 'east' && currentPos < stopPosition && currentPos + speedToUse >= stopPosition) {
                 return true;
             } else if (car.direction === 'west' && currentPos > stopPosition && currentPos - speedToUse <= stopPosition) {
                 return true;
             }
-        } else { // axis === 'top'
+        } else { // axis === 'y'
             if (car.direction === 'south' && currentPos > stopPosition && currentPos - speedToUse <= stopPosition) {
                 return true;
             } else if (car.direction === 'north' && currentPos < stopPosition && currentPos + speedToUse >= stopPosition) {
@@ -211,14 +177,14 @@ function moveCars() {
         const laneCars = lanes[direction];
         // Sort by position along movement axis: front-most first
         laneCars.sort((a, b) => {
-            if (a.config.axis === 'left') {
-                // east increases left, west decreases left
-                if (direction === 'east') return b.position - a.position; // front is larger left
-                return a.position - b.position; // west: front is smaller left
-            } else {
-                // north increases top, south decreases top
-                if (direction === 'north') return b.position - a.position; // front is larger top
-                return a.position - b.position; // south: front is smaller top
+            if (a.config.axis === 'x') {
+                // east increases x, west decreases x
+                if (direction === 'east') return b.position - a.position; // front is larger x
+                return a.position - b.position; // west: front is smaller x
+            } else { // 'y'
+                // north increases y, south decreases y
+                if (direction === 'north') return b.position - a.position; // front is larger y
+                return a.position - b.position; // south: front is smaller y
             }
         });
 
@@ -239,7 +205,7 @@ function moveCars() {
             if (shouldStop(car, predictedSpeed)) {
                 car.stopped = true;
                 car.targetSpeed = 0;
-                const stopPos = car.config.axis === 'left' ? car.config.stopPos.left : car.config.stopPos.top;
+                const stopPos = car.config.axis === 'x' ? car.config.stopPos.x : car.config.stopPos.y;
                 car.position = stopPos;
             } else {
                 car.stopped = false;
@@ -300,7 +266,7 @@ function moveCars() {
             }
 
             // Update visual position
-            if (car.config.axis === 'left') {
+            if (car.config.axis === 'x') {
                 car.element.style.left = car.position + 'px';
             } else {
                 car.element.style.top = car.position + 'px';
@@ -321,7 +287,7 @@ function moveCars() {
             }
 
             // Check if car should start fading out
-            const containerEdge = (car.config.axis === 'left')
+            const containerEdge = (car.config.axis === 'x')
                 ? (car.direction === 'east' ? 600 : 0)
                 : (car.direction === 'north' ? 600 : 0);
             
