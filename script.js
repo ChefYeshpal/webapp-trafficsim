@@ -214,7 +214,7 @@ function removeCar(car) {
     car.element.remove();
     cars = cars.filter(c => c.id !== car.id);
     // Remove from lane tracking
-    const laneArr = lanes[car.direction];
+    const laneArr = lanes[car.direction][car.lane];
     const idx = laneArr.findIndex(c => c.id === car.id);
     if (idx !== -1) laneArr.splice(idx, 1);
     updateLaneSpawnFlag(car.direction);
@@ -427,7 +427,7 @@ function moveCars() {
 
 // Update whether a lane is allowed to spawn based on count and hysteresis
 function updateLaneSpawnFlag(direction) {
-    const count = lanes[direction].length;
+    const count = lanes[direction].inner.length + lanes[direction].outer.length;
     if (count > 6) {
         laneAllowedToSpawn[direction] = false;
     } else if (count <= 3) {
