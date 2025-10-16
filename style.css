@@ -65,55 +65,29 @@ p {
 
 .road.horizontal {
     width: 600px;
-    height: 160px;
-    top: 220px;
+    height: 120px;
+    top: 240px;
     left: 0;
-    /* show inner lane separators */
-    background: linear-gradient(#555, #555);
-}
-
-.road.horizontal::before,
-.road.horizontal::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: rgba(243,156,18,0.9);
-}
-
-.road.horizontal::before { top: 260px; }
-.road.horizontal::after { top: 320px; }
+    border-top: 3px dashed #f39c12;
+    border-bottom: 3px dashed #f39c12;
 }
 
 .road.vertical {
-    width: 160px;
+    width: 120px;
     height: 600px;
-    left: 220px;
+    left: 240px;
     top: 0;
-    background: linear-gradient(#555, #555);
+    border-left: 3px dashed #f39c12;
+    border-right: 3px dashed #f39c12;
 }
-
-.road.vertical::before,
-.road.vertical::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: rgba(243,156,18,0.9);
-}
-
-.road.vertical::before { left: 260px; }
-.road.vertical::after { left: 320px; }
 
 /* Intersection */
 .intersection {
     position: absolute;
-    width: 160px;
-    height: 160px;
-    top: 220px;
-    left: 220px;
+    width: 120px;
+    height: 120px;
+    top: 240px;
+    left: 240px;
     background: #666;
     border: 3px solid #f39c12;
 }
