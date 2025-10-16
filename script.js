@@ -11,11 +11,12 @@ let cars = [];
 let carIdCounter = 0;
 
 // Per-lane tracking to enforce limits and spacing
+// Now we have two sub-lanes per direction: inner (straight) and outer (right turn)
 const lanes = {
-    east: [],
-    west: [],
-    north: [],
-    south: []
+    east: { inner: [], outer: [] },
+    west: { inner: [], outer: [] },
+    north: { inner: [], outer: [] },
+    south: { inner: [], outer: [] }
 };
 
 // Spawn control per-lane (hysteresis): pause when >6, resume when <=3
@@ -42,39 +43,71 @@ const carColors = [
     'linear-gradient(135deg, #34495e, #2c3e50)', // dark blue
 ];
 
-// Direction configurations
+// Direction configurations with two lanes each
 const directionConfigs = {
     east: {
-        // spawn just inside left edge, exit just past right edge
-        startPos: { left: 10, top: 250 },
-        stopPos: { left: 180, top: 250 },
-        endPos: { left: 600, top: 250 },
-        rotation: 0,
-        axis: 'left'
+        inner: { // straight traffic - inner lane
+            startPos: { left: 10, top: 233 }, // Adjusted for new road width
+            stopPos: { left: 180, top: 233 },
+            endPos: { left: 600, top: 233 },
+            rotation: 0,
+            axis: 'left'
+        },
+        outer: { // right turn traffic - outer lane
+            startPos: { left: 10, top: 275 },
+            stopPos: { left: 180, top: 275 },
+            endPos: { left: 600, top: 275 },
+            rotation: 0,
+            axis: 'left'
+        }
     },
     west: {
-        // spawn just inside right edge, exit just past left edge
-        startPos: { left: 560, top: 325 },
-        stopPos: { left: 390, top: 325 },
-        endPos: { left: -40, top: 325 },
-        rotation: 0,
-        axis: 'left'
+        inner: { // straight traffic - inner lane
+            startPos: { left: 560, top: 323 },
+            stopPos: { left: 390, top: 323 },
+            endPos: { left: -40, top: 323 },
+            rotation: 0,
+            axis: 'left'
+        },
+        outer: { // right turn traffic - outer lane
+            startPos: { left: 560, top: 280 },
+            stopPos: { left: 390, top: 280 },
+            endPos: { left: -40, top: 280 },
+            rotation: 0,
+            axis: 'left'
+        }
     },
     north: {
-        // spawn just inside top edge, exit just past bottom edge
-        startPos: { left: 260, top: 10 },
-        stopPos: { left: 260, top: 180 },
-        endPos: { left: 260, top: 600 },
-        rotation: 90,
-        axis: 'top'
+        inner: { // straight traffic - inner lane
+            startPos: { left: 323, top: 10 },
+            stopPos: { left: 323, top: 180 },
+            endPos: { left: 323, top: 600 },
+            rotation: 90,
+            axis: 'top'
+        },
+        outer: { // right turn traffic - outer lane
+            startPos: { left: 280, top: 10 },
+            stopPos: { left: 280, top: 180 },
+            endPos: { left: 280, top: 600 },
+            rotation: 90,
+            axis: 'top'
+        }
     },
     south: {
-        // spawn just inside bottom edge, exit just past top edge
-        startPos: { left: 300, top: 560 },
-        stopPos: { left: 300, top: 390 },
-        endPos: { left: 300, top: -40 },
-        rotation: 90,
-        axis: 'top'
+        inner: { // straight traffic - inner lane
+            startPos: { left: 233, top: 560 },
+            stopPos: { left: 233, top: 390 },
+            endPos: { left: 233, top: -40 },
+            rotation: 90,
+            axis: 'top'
+        },
+        outer: { // right turn traffic - outer lane
+            startPos: { left: 275, top: 560 },
+            stopPos: { left: 275, top: 390 },
+            endPos: { left: 275, top: -40 },
+            rotation: 90,
+            axis: 'top'
+        }
     }
 };
 
@@ -89,19 +122,43 @@ function getRandomDirection() {
     return directions[Math.floor(Math.random() * directions.length)];
 }
 
+// Get random turn intention (straight or right for now)
+function getRandomTurn() {
+    // 70% straight, 30% right turn
+    return Math.random() < 0.7 ? 'straight' : 'right';
+}
+
+// Calculate turn destination based on current direction and turn type
+function getTurnDestination(direction, turn) {
+    if (turn === 'straight') return null;
+    
+    // Right turns
+    const turnMap = {
+        'north': 'west',  // north turning right goes west
+        'south': 'east',  // south turning right goes east
+        'east': 'south',  // east turning right goes south
+        'west': 'north'   // west turning right goes north
+    };
+    
+    return turnMap[direction];
+}
+
 // Create a new car
 // Create a new car (optionally specify direction)
 function spawnCar(direction = null) {
     const dir = direction || getRandomDirection();
+    const turn = getRandomTurn();
+    const lane = turn === 'straight' ? 'inner' : 'outer';
 
     // Respect per-lane spawn allowance and max capacity
     if (!laneAllowedToSpawn[dir]) return null;
-    if (lanes[dir].length >= 6) {
+    const totalCars = lanes[dir].inner.length + lanes[dir].outer.length;
+    if (totalCars >= 6) {
         laneAllowedToSpawn[dir] = false;
         return null;
     }
 
-    const config = directionConfigs[dir];
+    const config = directionConfigs[dir][lane];
     const color = getRandomColor();
     const id = `car-${carIdCounter++}`;
     
@@ -109,6 +166,7 @@ function spawnCar(direction = null) {
     const carElement = document.createElement('div');
     carElement.className = 'car';
     carElement.id = id;
+    carElement.setAttribute('data-turn', turn);
     carElement.style.background = color;
     carElement.style.left = config.startPos.left + 'px';
     carElement.style.top = config.startPos.top + 'px';
@@ -129,18 +187,24 @@ function spawnCar(direction = null) {
         id: id,
         element: carElement,
         direction: dir,
+        lane: lane,
+        turn: turn,
         config: config,
         position: config.axis === 'left' ? config.startPos.left : config.startPos.top,
+        crossPosition: config.axis === 'left' ? config.startPos.top : config.startPos.left,
         baseSpeed: baseSpeed,
         currentSpeed: 0,
         targetSpeed: baseSpeed,
         accelFactor: 0.12, // acceleration smoothing
         stopped: false,
-        desiredGap: 50 // px gap to keep from car ahead
+        desiredGap: 50, // px gap to keep from car ahead
+        turning: false,
+        turnProgress: 0,
+        turnDestination: getTurnDestination(dir, turn)
     };
     
     cars.push(car);
-    lanes[dir].push(car);
+    lanes[dir][lane].push(car);
     updateLaneSpawnFlag(dir);
     return car;
 }
