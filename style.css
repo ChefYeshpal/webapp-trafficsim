@@ -70,12 +70,13 @@ p {
     left: 0;
     border-top: 3px solid #f39c12;
     border-bottom: 3px solid #f39c12;
-    background: linear-gradient(to bottom, 
-        #555 0%, #555 42%, 
-        #f39c12 42%, #f39c12 46%, 
-        transparent 46%, transparent 54%,
-        #f39c12 54%, #f39c12 58%,
-        #555 58%, #555 100%);
+    /* Two lanes per direction with a dotted off-white center divider */
+    background: linear-gradient(to bottom, #555 0%, #555 30%, transparent 30%),
+                linear-gradient(to bottom, #555 70%, #555 100%, transparent 70%),
+                repeating-linear-gradient(to bottom, rgba(255,255,240,0.9) 0px, rgba(255,255,240,0.9) 3px, transparent 3px, transparent 12px);
+    background-blend-mode: normal, normal, normal;
+    background-position: 0 0, 0 0, 300px 50%;
+    background-size: 100% 60%, 100% 60%, 6px 24px;
 }
 
 .road.vertical {
@@ -85,12 +86,13 @@ p {
     top: 0;
     border-left: 3px solid #f39c12;
     border-right: 3px solid #f39c12;
-    background: linear-gradient(to right,
-        #555 0%, #555 42%,
-        #f39c12 42%, #f39c12 46%,
-        transparent 46%, transparent 54%,
-        #f39c12 54%, #f39c12 58%,
-        #555 58%, #555 100%);
+    /* Two lanes per direction with a dotted off-white center divider */
+    background: linear-gradient(to right, #555 0%, #555 30%, transparent 30%),
+                linear-gradient(to right, #555 70%, #555 100%, transparent 70%),
+                repeating-linear-gradient(to right, rgba(255,255,240,0.9) 0px, rgba(255,255,240,0.9) 3px, transparent 3px, transparent 12px);
+    background-blend-mode: normal, normal, normal;
+    background-position: 0 0, 0 0, 50% 300px;
+    background-size: 60% 100%, 60% 100%, 24px 6px;
 }
 
 /* Intersection */
