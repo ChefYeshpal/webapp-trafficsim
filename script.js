@@ -476,8 +476,14 @@ function startCarSpawning() {
         if (Math.random() < 0.8) {
             // Choose a direction but prefer allowed lanes
             const directions = ['north', 'south', 'east', 'west'];
-            const allowed = directions.filter(d => laneAllowedToSpawn[d] && lanes[d].length < 6);
-            const pool = allowed.length ? allowed : directions.filter(d => lanes[d].length < 6);
+            const allowed = directions.filter(d => {
+                const total = lanes[d].inner.length + lanes[d].outer.length;
+                return laneAllowedToSpawn[d] && total < 6;
+            });
+            const pool = allowed.length ? allowed : directions.filter(d => {
+                const total = lanes[d].inner.length + lanes[d].outer.length;
+                return total < 6;
+            });
             const poolFinal = pool.length ? pool : directions; // fallback
             const dir = poolFinal[Math.floor(Math.random() * poolFinal.length)];
             spawnCar(dir);
