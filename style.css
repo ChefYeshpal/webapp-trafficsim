@@ -213,3 +213,14 @@ p {
     border-bottom: 8px solid #fff;
     filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
 }
+
+/* Blinkers: pulsing hood indicator for turning cars */
+.blinker-left::after, .blinker-right::after {
+    animation: blinker 1s steps(2) infinite;
+}
+
+@keyframes blinker {
+    0% { opacity: 1; }
+    50% { opacity: 0.2; }
+    100% { opacity: 1; }
+}

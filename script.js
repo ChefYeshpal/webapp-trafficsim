@@ -47,64 +47,64 @@ const carColors = [
 const directionConfigs = {
     east: {
         inner: { // straight traffic - inner lane
-            startPos: { left: 10, top: 233 }, // Adjusted for new road width
-            stopPos: { left: 180, top: 233 },
-            endPos: { left: 600, top: 233 },
+            startPos: { left: 10, top: 250 }, // inner lane (closer to intersection center)
+            stopPos: { left: 180, top: 250 },
+            endPos: { left: 600, top: 250 },
             rotation: 0,
             axis: 'left'
         },
         outer: { // right turn traffic - outer lane
-            startPos: { left: 10, top: 275 },
-            stopPos: { left: 180, top: 275 },
-            endPos: { left: 600, top: 275 },
+            startPos: { left: 10, top: 290 }, // outer lane (farther from center)
+            stopPos: { left: 180, top: 290 },
+            endPos: { left: 600, top: 290 },
             rotation: 0,
             axis: 'left'
         }
     },
     west: {
         inner: { // straight traffic - inner lane
-            startPos: { left: 560, top: 323 },
-            stopPos: { left: 390, top: 323 },
-            endPos: { left: -40, top: 323 },
+            startPos: { left: 560, top: 350 },
+            stopPos: { left: 390, top: 350 },
+            endPos: { left: -40, top: 350 },
             rotation: 0,
             axis: 'left'
         },
         outer: { // right turn traffic - outer lane
-            startPos: { left: 560, top: 280 },
-            stopPos: { left: 390, top: 280 },
-            endPos: { left: -40, top: 280 },
+            startPos: { left: 560, top: 305 },
+            stopPos: { left: 390, top: 305 },
+            endPos: { left: -40, top: 305 },
             rotation: 0,
             axis: 'left'
         }
     },
     north: {
         inner: { // straight traffic - inner lane
-            startPos: { left: 323, top: 10 },
-            stopPos: { left: 323, top: 180 },
-            endPos: { left: 323, top: 600 },
+            startPos: { left: 300, top: 10 },
+            stopPos: { left: 300, top: 180 },
+            endPos: { left: 300, top: 600 },
             rotation: 90,
             axis: 'top'
         },
         outer: { // right turn traffic - outer lane
-            startPos: { left: 280, top: 10 },
-            stopPos: { left: 280, top: 180 },
-            endPos: { left: 280, top: 600 },
+            startPos: { left: 255, top: 10 },
+            stopPos: { left: 255, top: 180 },
+            endPos: { left: 255, top: 600 },
             rotation: 90,
             axis: 'top'
         }
     },
     south: {
         inner: { // straight traffic - inner lane
-            startPos: { left: 233, top: 560 },
-            stopPos: { left: 233, top: 390 },
-            endPos: { left: 233, top: -40 },
+            startPos: { left: 320, top: 560 },
+            stopPos: { left: 320, top: 390 },
+            endPos: { left: 320, top: -40 },
             rotation: 90,
             axis: 'top'
         },
         outer: { // right turn traffic - outer lane
-            startPos: { left: 275, top: 560 },
-            stopPos: { left: 275, top: 390 },
-            endPos: { left: 275, top: -40 },
+            startPos: { left: 285, top: 560 },
+            stopPos: { left: 285, top: 390 },
+            endPos: { left: 285, top: -40 },
             rotation: 90,
             axis: 'top'
         }
@@ -124,23 +124,30 @@ function getRandomDirection() {
 
 // Get random turn intention (straight or right for now)
 function getRandomTurn() {
-    // 70% straight, 30% right turn
-    return Math.random() < 0.7 ? 'straight' : 'right';
+    // 60% straight, 20% right, 20% left
+    const r = Math.random();
+    if (r < 0.6) return 'straight';
+    if (r < 0.8) return 'right';
+    return 'left';
 }
 
 // Calculate turn destination based on current direction and turn type
 function getTurnDestination(direction, turn) {
     if (turn === 'straight') return null;
-    
-    // Right turns
-    const turnMap = {
-        'north': 'west',  // north turning right goes west
-        'south': 'east',  // south turning right goes east
-        'east': 'south',  // east turning right goes south
-        'west': 'north'   // west turning right goes north
+    // Mapping for right and left turns
+    const rightMap = {
+        'north': 'west',
+        'south': 'east',
+        'east': 'south',
+        'west': 'north'
     };
-    
-    return turnMap[direction];
+    const leftMap = {
+        'north': 'east',
+        'south': 'west',
+        'east': 'north',
+        'west': 'south'
+    };
+    return turn === 'right' ? rightMap[direction] : leftMap[direction];
 }
 
 // Create a new car
@@ -148,6 +155,7 @@ function getTurnDestination(direction, turn) {
 function spawnCar(direction = null) {
     const dir = direction || getRandomDirection();
     const turn = getRandomTurn();
+    // Lane assignment: inner = straight, outer = turning lane (left or right depending on approach)
     const lane = turn === 'straight' ? 'inner' : 'outer';
 
     // Respect per-lane spawn allowance and max capacity
@@ -171,6 +179,10 @@ function spawnCar(direction = null) {
     carElement.style.left = config.startPos.left + 'px';
     carElement.style.top = config.startPos.top + 'px';
     carElement.style.transform = `rotate(${config.rotation}deg)`;
+
+    // Add blinker class for turning cars so CSS can animate it
+    if (turn === 'left') carElement.classList.add('blinker-left');
+    if (turn === 'right') carElement.classList.add('blinker-right');
     
     const container = document.querySelector('.intersection-container');
     if (!container) return null;
@@ -319,61 +331,65 @@ function moveCars() {
 
                 if (car.turning) {
                     // Handle turning animation
-                    car.turnProgress += 0.02; // Control turn speed
-                    
+                    car.turnProgress += 0.025; // Control turn speed
+
                     if (car.turnProgress >= 1) {
                         car.turnProgress = 1;
                         car.turning = false;
                     }
 
-                    // Calculate smooth turn path
                     const t = car.turnProgress;
                     const easeT = t * t * (3 - 2 * t); // Smoothstep easing
-                    
-                    // Define turn centers and radii based on direction
-                    let centerX, centerY, startAngle, endAngle, radius;
-                    
+
+                    // Choose arc parameters depending on turn direction and approach
+                    let centerX = 300, centerY = 300, startAngle = 0, endAngle = 0, radius = 100;
+                    const isLeftTurn = car.turn === 'left';
+
                     if (direction === 'east') {
-                        // Turning from east to south
-                        centerX = 390;
-                        centerY = 275;
-                        radius = 115;
-                        startAngle = Math.PI;
-                        endAngle = Math.PI / 2;
+                        if (isLeftTurn) {
+                            // east -> north (left)
+                            centerX = 390; centerY = 320; startAngle = Math.PI; endAngle = -Math.PI/2; radius = 115;
+                        } else {
+                            // east -> south (right)
+                            centerX = 390; centerY = 275; startAngle = Math.PI; endAngle = Math.PI/2; radius = 115;
+                        }
                     } else if (direction === 'west') {
-                        // Turning from west to north
-                        centerX = 210;
-                        centerY = 280;
-                        radius = 110;
-                        startAngle = 0;
-                        endAngle = -Math.PI / 2;
+                        if (isLeftTurn) {
+                            // west -> south (left)
+                            centerX = 210; centerY = 280; startAngle = 0; endAngle = Math.PI/2; radius = 115;
+                        } else {
+                            // west -> north (right)
+                            centerX = 210; centerY = 335; startAngle = 0; endAngle = -Math.PI/2; radius = 115;
+                        }
                     } else if (direction === 'north') {
-                        // Turning from north to west
-                        centerX = 280;
-                        centerY = 390;
-                        radius = 110;
-                        startAngle = -Math.PI / 2;
-                        endAngle = Math.PI;
+                        if (isLeftTurn) {
+                            // north -> east (left)
+                            centerX = 255; centerY = 390; startAngle = -Math.PI/2; endAngle = 0; radius = 115;
+                        } else {
+                            // north -> west (right)
+                            centerX = 300; centerY = 390; startAngle = -Math.PI/2; endAngle = Math.PI; radius = 115;
+                        }
                     } else if (direction === 'south') {
-                        // Turning from south to east
-                        centerX = 275;
-                        centerY = 210;
-                        radius = 115;
-                        startAngle = Math.PI / 2;
-                        endAngle = 0;
+                        if (isLeftTurn) {
+                            // south -> west (left)
+                            centerX = 320; centerY = 210; startAngle = Math.PI/2; endAngle = Math.PI; radius = 115;
+                        } else {
+                            // south -> east (right)
+                            centerX = 275; centerY = 210; startAngle = Math.PI/2; endAngle = 0; radius = 115;
+                        }
                     }
-                    
+
                     const angle = startAngle + (endAngle - startAngle) * easeT;
                     const newLeft = centerX + Math.cos(angle) * radius;
                     const newTop = centerY + Math.sin(angle) * radius;
-                    
+
                     car.element.style.left = newLeft + 'px';
                     car.element.style.top = newTop + 'px';
-                    
-                    // Update rotation for smooth turn
+
+                    // Update rotation for smooth turn (face tangent)
                     const rotation = (angle * 180 / Math.PI) + 90;
                     car.element.style.transform = `rotate(${rotation}deg)`;
-                    
+
                     // Update position tracking
                     if (car.config.axis === 'left') {
                         car.position = newLeft;
