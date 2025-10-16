@@ -264,162 +264,246 @@ function shouldStop(car, predictedSpeed = null) {
 
 // Move all cars
 function moveCars() {
-    // For each lane, process cars front-to-back to maintain spacing
+    // For each direction and lane, process cars front-to-back to maintain spacing
     Object.keys(lanes).forEach(direction => {
-        const laneCars = lanes[direction];
-        // Sort by position along movement axis: front-most first
-        laneCars.sort((a, b) => {
-            if (a.config.axis === 'left') {
-                // east increases left, west decreases left
-                if (direction === 'east') return b.position - a.position; // front is larger left
-                return a.position - b.position; // west: front is smaller left
-            } else {
-                // north increases top, south decreases top
-                if (direction === 'north') return b.position - a.position; // front is larger top
-                return a.position - b.position; // south: front is smaller top
-            }
-        });
-
-        for (let i = 0; i < laneCars.length; i++) {
-            const car = laneCars[i];
-
-            // Determine front car (if any)
-            const frontCar = i === 0 ? null : laneCars[i - 1];
-
-            // Movement & stopping logic with easing
-            // Use baseSpeed as the predicted movement for approach checks
-            const predictedSpeed = car.baseSpeed;
-
-            // Reset targetSpeed to base by default; will be zeroed if stopped
-            car.targetSpeed = car.baseSpeed;
-
-            // First, check red light stopping behavior at intersection
-            if (shouldStop(car, predictedSpeed)) {
-                car.stopped = true;
-                car.targetSpeed = 0;
-                const stopPos = car.config.axis === 'left' ? car.config.stopPos.left : car.config.stopPos.top;
-                car.position = stopPos;
-            } else {
-                car.stopped = false;
-
-                // Tentative movement using predictedSpeed for collision checks
-                let proposedPos = car.position;
-                if (car.direction === 'east' || car.direction === 'north') {
-                    proposedPos += predictedSpeed;
+        ['inner', 'outer'].forEach(laneType => {
+            const laneCars = lanes[direction][laneType];
+            // Sort by position along movement axis: front-most first
+            laneCars.sort((a, b) => {
+                if (a.config.axis === 'left') {
+                    // east increases left, west decreases left
+                    if (direction === 'east') return b.position - a.position; // front is larger left
+                    return a.position - b.position; // west: front is smaller left
                 } else {
-                    proposedPos -= predictedSpeed;
+                    // north increases top, south decreases top
+                    if (direction === 'north') return b.position - a.position; // front is larger top
+                    return a.position - b.position; // south: front is smaller top
                 }
+            });
 
-                // If there is a car ahead, ensure we don't get closer than desiredGap
-                if (frontCar) {
-                    const distanceBetween = Math.abs(frontCar.position - proposedPos);
-                    const minAllowed = car.desiredGap;
-                    if (distanceBetween <= minAllowed) {
-                        // Stay behind front car at min gap and stop
-                        if (frontCar.position > proposedPos) {
-                            proposedPos = frontCar.position - minAllowed;
-                        } else {
-                            proposedPos = frontCar.position + minAllowed;
+            for (let i = 0; i < laneCars.length; i++) {
+                const car = laneCars[i];
+
+                // Check if car should start turning
+                if (!car.turning && car.turn === 'right') {
+                    const intersectionStart = car.config.axis === 'left' ? 210 : 210;
+                    const intersectionEnd = car.config.axis === 'left' ? 390 : 390;
+                    
+                    if (car.config.axis === 'left') {
+                        if (direction === 'east' && car.position >= intersectionStart && car.position < intersectionEnd) {
+                            car.turning = true;
+                            car.turnProgress = 0;
+                        } else if (direction === 'west' && car.position <= intersectionEnd && car.position > intersectionStart) {
+                            car.turning = true;
+                            car.turnProgress = 0;
                         }
-                        car.targetSpeed = 0;
-                        car.stopped = true;
+                    } else {
+                        if (direction === 'north' && car.position >= intersectionStart && car.position < intersectionEnd) {
+                            car.turning = true;
+                            car.turnProgress = 0;
+                        } else if (direction === 'south' && car.position <= intersectionEnd && car.position > intersectionStart) {
+                            car.turning = true;
+                            car.turnProgress = 0;
+                        }
                     }
                 }
 
-                // Update position based on currentSpeed (which will be eased toward targetSpeed below)
-                // We'll update position after easing currentSpeed
-                car.nextProposedPosition = proposedPos;
-            }
+                // Determine front car (if any)
+                const frontCar = i === 0 ? null : laneCars[i - 1];
 
-            // Ease currentSpeed towards targetSpeed
-            car.currentSpeed += (car.targetSpeed - car.currentSpeed) * car.accelFactor;
-            const speedThisFrame = car.currentSpeed;
+                // Movement & stopping logic with easing
+                const predictedSpeed = car.baseSpeed;
 
-            // If we have a nextProposedPosition from collision checks, prefer it
-            if (car.hasOwnProperty('nextProposedPosition')) {
-                // Move toward nextProposedPosition but not overshoot
-                const desired = car.nextProposedPosition;
-                // If moving in increasing direction
-                if (car.direction === 'east' || car.direction === 'north') {
-                    const maxMove = speedThisFrame;
-                    car.position = Math.min(desired, car.position + maxMove);
+                // Reset targetSpeed to base by default; will be zeroed if stopped
+                car.targetSpeed = car.baseSpeed;
+
+                if (car.turning) {
+                    // Handle turning animation
+                    car.turnProgress += 0.02; // Control turn speed
+                    
+                    if (car.turnProgress >= 1) {
+                        car.turnProgress = 1;
+                        car.turning = false;
+                    }
+
+                    // Calculate smooth turn path
+                    const t = car.turnProgress;
+                    const easeT = t * t * (3 - 2 * t); // Smoothstep easing
+                    
+                    // Define turn centers and radii based on direction
+                    let centerX, centerY, startAngle, endAngle, radius;
+                    
+                    if (direction === 'east') {
+                        // Turning from east to south
+                        centerX = 390;
+                        centerY = 275;
+                        radius = 115;
+                        startAngle = Math.PI;
+                        endAngle = Math.PI / 2;
+                    } else if (direction === 'west') {
+                        // Turning from west to north
+                        centerX = 210;
+                        centerY = 280;
+                        radius = 110;
+                        startAngle = 0;
+                        endAngle = -Math.PI / 2;
+                    } else if (direction === 'north') {
+                        // Turning from north to west
+                        centerX = 280;
+                        centerY = 390;
+                        radius = 110;
+                        startAngle = -Math.PI / 2;
+                        endAngle = Math.PI;
+                    } else if (direction === 'south') {
+                        // Turning from south to east
+                        centerX = 275;
+                        centerY = 210;
+                        radius = 115;
+                        startAngle = Math.PI / 2;
+                        endAngle = 0;
+                    }
+                    
+                    const angle = startAngle + (endAngle - startAngle) * easeT;
+                    const newLeft = centerX + Math.cos(angle) * radius;
+                    const newTop = centerY + Math.sin(angle) * radius;
+                    
+                    car.element.style.left = newLeft + 'px';
+                    car.element.style.top = newTop + 'px';
+                    
+                    // Update rotation for smooth turn
+                    const rotation = (angle * 180 / Math.PI) + 90;
+                    car.element.style.transform = `rotate(${rotation}deg)`;
+                    
+                    // Update position tracking
+                    if (car.config.axis === 'left') {
+                        car.position = newLeft;
+                        car.crossPosition = newTop;
+                    } else {
+                        car.position = newTop;
+                        car.crossPosition = newLeft;
+                    }
                 } else {
-                    const maxMove = speedThisFrame;
-                    car.position = Math.max(desired, car.position - maxMove);
+                    // Normal straight-line movement
+                    // First, check red light stopping behavior at intersection
+                    if (shouldStop(car, predictedSpeed)) {
+                        car.stopped = true;
+                        car.targetSpeed = 0;
+                        const stopPos = car.config.axis === 'left' ? car.config.stopPos.left : car.config.stopPos.top;
+                        car.position = stopPos;
+                    } else {
+                        car.stopped = false;
+
+                        // Tentative movement using predictedSpeed for collision checks
+                        let proposedPos = car.position;
+                        if (car.direction === 'east' || car.direction === 'north') {
+                            proposedPos += predictedSpeed;
+                        } else {
+                            proposedPos -= predictedSpeed;
+                        }
+
+                        // If there is a car ahead, ensure we don't get closer than desiredGap
+                        if (frontCar && !frontCar.turning) {
+                            const distanceBetween = Math.abs(frontCar.position - proposedPos);
+                            const minAllowed = car.desiredGap;
+                            if (distanceBetween <= minAllowed) {
+                                // Stay behind front car at min gap and stop
+                                if (frontCar.position > proposedPos) {
+                                    proposedPos = frontCar.position - minAllowed;
+                                } else {
+                                    proposedPos = frontCar.position + minAllowed;
+                                }
+                                car.targetSpeed = 0;
+                                car.stopped = true;
+                            }
+                        }
+
+                        // Update position based on currentSpeed (which will be eased toward targetSpeed below)
+                        car.nextProposedPosition = proposedPos;
+                    }
+
+                    // Ease currentSpeed towards targetSpeed
+                    car.currentSpeed += (car.targetSpeed - car.currentSpeed) * car.accelFactor;
+                    const speedThisFrame = car.currentSpeed;
+
+                    // If we have a nextProposedPosition from collision checks, prefer it
+                    if (car.hasOwnProperty('nextProposedPosition')) {
+                        const desired = car.nextProposedPosition;
+                        if (car.direction === 'east' || car.direction === 'north') {
+                            const maxMove = speedThisFrame;
+                            car.position = Math.min(desired, car.position + maxMove);
+                        } else {
+                            const maxMove = speedThisFrame;
+                            car.position = Math.max(desired, car.position - maxMove);
+                        }
+                        delete car.nextProposedPosition;
+                    } else {
+                        // Normal movement
+                        if (car.direction === 'east' || car.direction === 'north') {
+                            car.position += speedThisFrame;
+                        } else {
+                            car.position -= speedThisFrame;
+                        }
+                    }
+
+                    // Update visual position
+                    if (car.config.axis === 'left') {
+                        car.element.style.left = car.position + 'px';
+                        car.element.style.top = car.crossPosition + 'px';
+                    } else {
+                        car.element.style.top = car.position + 'px';
+                        car.element.style.left = car.crossPosition + 'px';
+                    }
                 }
-                delete car.nextProposedPosition;
-            } else {
-                // Normal movement
-                if (car.direction === 'east' || car.direction === 'north') {
-                    car.position += speedThisFrame;
+
+                // Fade-out logic
+                const containerEdge = (car.config.axis === 'left')
+                    ? (car.direction === 'east' ? 600 : 0)
+                    : (car.direction === 'north' ? 600 : 0);
+
+                const disappearInsideMargin = 10;
+                const fadeDistance = 100;
+
+                const disappearPoint = (car.direction === 'east' || car.direction === 'north')
+                    ? (containerEdge - disappearInsideMargin)
+                    : (containerEdge + disappearInsideMargin);
+
+                const carWidth = 40;
+                const carHeight = 25;
+                let frontPos;
+                if (car.config.axis === 'left') {
+                    frontPos = (car.direction === 'east') ? (car.position + carWidth) : car.position;
                 } else {
-                    car.position -= speedThisFrame;
+                    frontPos = (car.direction === 'north') ? (car.position + carHeight) : car.position;
+                }
+
+                let distToDisappear;
+                if (car.direction === 'east' || car.direction === 'north') {
+                    distToDisappear = disappearPoint - frontPos;
+                } else {
+                    distToDisappear = frontPos - disappearPoint;
+                }
+
+                let opacity = 1;
+                if (distToDisappear >= fadeDistance) {
+                    opacity = 1;
+                } else if (distToDisappear > 0 && distToDisappear < fadeDistance) {
+                    opacity = Math.max(0, distToDisappear / fadeDistance);
+                } else if (distToDisappear <= 0) {
+                    opacity = 0;
+                }
+                car.element.style.opacity = opacity.toString();
+
+                // Remove car when fully faded
+                const safetyRemovalMargin = 80;
+                if (opacity <= 0) {
+                    removeCar(car);
+                } else if ((car.direction === 'east' || car.direction === 'north') && car.position > containerEdge + safetyRemovalMargin) {
+                    removeCar(car);
+                } else if ((car.direction === 'west' || car.direction === 'south') && car.position < containerEdge - safetyRemovalMargin) {
+                    removeCar(car);
                 }
             }
-
-            // Update visual position
-            if (car.config.axis === 'left') {
-                car.element.style.left = car.position + 'px';
-            } else {
-                car.element.style.top = car.position + 'px';
-            }
-
-            // Fade-out inside the container relative to the container edge
-            // The intersection container is 600x600; calculate distance to the inner edge
-            const containerEdge = (car.config.axis === 'left')
-                ? (car.direction === 'east' ? 600 : 0)
-                : (car.direction === 'north' ? 600 : 0);
-
-            const disappearInsideMargin = 10; // how far inside the container they should fully disappear
-            const fadeDistance = 100; // start fading this many px before the disappearance point
-
-            // The point at which the car should be fully faded (inside the container)
-            const disappearPoint = (car.direction === 'east' || car.direction === 'north')
-                ? (containerEdge - disappearInsideMargin)
-                : (containerEdge + disappearInsideMargin);
-
-            // distance to disappearPoint along travel direction (positive when still inside before disappearPoint)
-            // Use the car's front edge (so it fades while still visible inside the container)
-            const carWidth = 40;
-            const carHeight = 25;
-            let frontPos;
-            if (car.config.axis === 'left') {
-                // horizontal movement: for east the front is at position + width, for west the front is at position
-                frontPos = (car.direction === 'east') ? (car.position + carWidth) : car.position;
-            } else {
-                // vertical movement: for north (moving down) front is position + height, for south front is position
-                frontPos = (car.direction === 'north') ? (car.position + carHeight) : car.position;
-            }
-
-            let distToDisappear;
-            if (car.direction === 'east' || car.direction === 'north') {
-                distToDisappear = disappearPoint - frontPos;
-            } else {
-                distToDisappear = frontPos - disappearPoint;
-            }
-
-            // Compute opacity: fade from 1 -> 0 as distToDisappear goes from fadeDistance -> 0
-            let opacity = 1;
-            if (distToDisappear >= fadeDistance) {
-                opacity = 1;
-            } else if (distToDisappear > 0 && distToDisappear < fadeDistance) {
-                opacity = Math.max(0, distToDisappear / fadeDistance);
-            } else if (distToDisappear <= 0) {
-                // reached or passed disappear point: fully faded
-                opacity = 0;
-            }
-            car.element.style.opacity = opacity.toString();
-
-            // Remove car when fully faded (opacity 0). Also include a safety net removal
-            const safetyRemovalMargin = 80; // if car somehow goes too far, remove it
-            if (opacity <= 0) {
-                removeCar(car);
-            } else if ((car.direction === 'east' || car.direction === 'north') && car.position > containerEdge + safetyRemovalMargin) {
-                removeCar(car);
-            } else if ((car.direction === 'west' || car.direction === 'south') && car.position < containerEdge - safetyRemovalMargin) {
-                removeCar(car);
-            }
-        }
+        });
     });
 }
 
