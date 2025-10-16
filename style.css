@@ -106,6 +106,28 @@ p {
     border: 3px solid #f39c12;
 }
 
+.intersection::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: rgba(255,255,255,0.06);
+    transform: translateX(-50%);
+}
+
+.intersection::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 2px;
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    transform: translateY(-50%);
+}
+
 /* Traffic Lights */
 .traffic-light {
     position: absolute;
@@ -194,17 +216,17 @@ p {
 }
 
 .car[data-turn="left"]::after {
-    border-top: 5px solid transparent;
-    border-bottom: 5px solid transparent;
-    border-right: 8px solid #fff;
-    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right: 10px solid #ffd166; /* amber */
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.6));
 }
 
 .car[data-turn="right"]::after {
-    border-top: 5px solid transparent;
-    border-bottom: 5px solid transparent;
-    border-left: 8px solid #fff;
-    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 10px solid #ffd166; /* amber */
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.6));
 }
 
 .car[data-turn="straight"]::after {
