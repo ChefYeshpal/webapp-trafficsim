@@ -336,6 +336,35 @@ function moveCars() {
                     if (car.turnProgress >= 1) {
                         car.turnProgress = 1;
                         car.turning = false;
+                        // finalize turn: update direction to destination
+                        const newDir = car.turnDestination || car.direction;
+                        const oldDir = car.direction;
+                        // Remove from old lane array
+                        const oldLaneArr = lanes[oldDir][car.lane];
+                        const idxOld = oldLaneArr.findIndex(c => c.id === car.id);
+                        if (idxOld !== -1) oldLaneArr.splice(idxOld, 1);
+
+                        // By default after a turn, car goes straight in the appropriate inner lane
+                        const newLane = 'inner';
+                        car.direction = newDir;
+                        car.lane = newLane;
+                        car.turn = 'straight';
+                        car.turnDestination = null;
+                        car.element.setAttribute('data-turn', 'straight');
+                        car.element.classList.remove('blinker-left', 'blinker-right');
+
+                        // Add to new lane array
+                        lanes[newDir][newLane].push(car);
+
+                        // Align car to lane center for new direction
+                        const newConfig = directionConfigs[newDir][newLane];
+                        if (newConfig.axis === 'left') {
+                            car.position = car.element.offsetLeft = newConfig.stopPos.left + 10; // just past intersection
+                            car.crossPosition = car.element.offsetTop = newConfig.startPos.top;
+                        } else {
+                            car.position = car.element.offsetTop = newConfig.stopPos.top + 10;
+                            car.crossPosition = car.element.offsetLeft = newConfig.startPos.left;
+                        }
                     }
 
                     const t = car.turnProgress;
