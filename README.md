@@ -42,3 +42,4 @@ Although, it will probably be much much simpler, with less logic involved as I c
 - 15 Oct 2025
     - I, for the past hour, have been trying to ADD A TURNING BULLSHIT into this, but do you know how hard it is? Honestly, I dont. It's too hard.
     - Changed the fade out animation for the vehicles, should fade out smoother now
+    - Created a dedicated file for path functions, should maybe make it easier for me now?

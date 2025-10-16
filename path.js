@@ -19,7 +19,7 @@ const vehiclePaths = {
     },
     north: {
         points: [
-            { x: 260, y: 10 },
+            { x: 250, y: 10 },
             { x: 260, y: 600 }
         ],
         stopPos: { x: 260, y: 180 },
