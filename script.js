@@ -122,8 +122,6 @@ function spawnCar(direction = null) {
     const baseSpeed = 1 + Math.random() * 1; // Random base speed between 1-2
     // Start with currentSpeed 0 and ease into target (baseSpeed)
     carElement.style.opacity = '0';
-    // small delay so CSS transition can animate opacity
-    requestAnimationFrame(() => carElement.style.opacity = '1');
 
     const car = {
         id: id,
@@ -136,10 +134,18 @@ function spawnCar(direction = null) {
         targetSpeed: baseSpeed,
         accelFactor: 0.12, // acceleration smoothing
         stopped: false,
-        desiredGap: 50 // px gap to keep from car ahead
+        desiredGap: 50, // px gap to keep from car ahead
+        fadeState: {
+            fadingIn: true,
+            fadingOut: false,
+            opacity: 0,
+            duration: 250, // ms for fade
+            startTime: performance.now()
+        }
     };
     
-    cars.push(car);
+    // No longer need requestAnimationFrame for opacity change
+    // requestAnimationFrame(() => carElement.style.opacity = '1');
     lanes[dir].push(car);
     updateLaneSpawnFlag(dir);
     return car;
@@ -300,60 +306,61 @@ function moveCars() {
                 car.element.style.top = car.position + 'px';
             }
 
-            // Fade-out inside the container relative to the container edge
-            // The intersection container is 600x600; calculate distance to the inner edge
+            // --- Fading Logic ---
+            const now = performance.now();
+            const fade = car.fadeState;
+
+            if (fade.fadingIn) {
+                const elapsed = now - fade.startTime;
+                if (elapsed < fade.duration) {
+                    fade.opacity = elapsed / fade.duration;
+                } else {
+                    fade.opacity = 1;
+                    fade.fadingIn = false;
+                }
+            }
+
+            // Check if car should start fading out
             const containerEdge = (car.config.axis === 'left')
                 ? (car.direction === 'east' ? 600 : 0)
                 : (car.direction === 'north' ? 600 : 0);
-
-            const disappearInsideMargin = 10; // how far inside the container they should fully disappear
-            const fadeDistance = 100; // start fading this many px before the disappearance point
-
-            // The point at which the car should be fully faded (inside the container)
-            const disappearPoint = (car.direction === 'east' || car.direction === 'north')
-                ? (containerEdge - disappearInsideMargin)
-                : (containerEdge + disappearInsideMargin);
-
-            // distance to disappearPoint along travel direction (positive when still inside before disappearPoint)
-            // Use the car's front edge (so it fades while still visible inside the container)
-            const carWidth = 40;
-            const carHeight = 25;
-            let frontPos;
-            if (car.config.axis === 'left') {
-                // horizontal movement: for east the front is at position + width, for west the front is at position
-                frontPos = (car.direction === 'east') ? (car.position + carWidth) : car.position;
-            } else {
-                // vertical movement: for north (moving down) front is position + height, for south front is position
-                frontPos = (car.direction === 'north') ? (car.position + carHeight) : car.position;
-            }
-
-            let distToDisappear;
+            
+            const fadeOutStartDistance = 80; // px from edge to start fading
+            let distToEdge;
             if (car.direction === 'east' || car.direction === 'north') {
-                distToDisappear = disappearPoint - frontPos;
+                distToEdge = containerEdge - car.position;
             } else {
-                distToDisappear = frontPos - disappearPoint;
+                distToEdge = car.position - containerEdge;
             }
 
-            // Compute opacity: fade from 1 -> 0 as distToDisappear goes from fadeDistance -> 0
-            let opacity = 1;
-            if (distToDisappear >= fadeDistance) {
-                opacity = 1;
-            } else if (distToDisappear > 0 && distToDisappear < fadeDistance) {
-                opacity = Math.max(0, distToDisappear / fadeDistance);
-            } else if (distToDisappear <= 0) {
-                // reached or passed disappear point: fully faded
-                opacity = 0;
+            if (!fade.fadingOut && distToEdge <= fadeOutStartDistance) {
+                fade.fadingOut = true;
+                fade.startTime = now;
+                fade.duration = 500; // fade out a bit slower
             }
-            car.element.style.opacity = opacity.toString();
 
-            // Remove car when fully faded (opacity 0). Also include a safety net removal
-            const safetyRemovalMargin = 80; // if car somehow goes too far, remove it
-            if (opacity <= 0) {
+            if (fade.fadingOut) {
+                const elapsed = now - fade.startTime;
+                if (elapsed < fade.duration) {
+                    fade.opacity = 1 - (elapsed / fade.duration);
+                } else {
+                    fade.opacity = 0;
+                }
+            }
+            
+            car.element.style.opacity = Math.max(0, Math.min(1, fade.opacity)).toString();
+
+            // Remove car when fully faded out
+            if (fade.fadingOut && fade.opacity <= 0) {
                 removeCar(car);
-            } else if ((car.direction === 'east' || car.direction === 'north') && car.position > containerEdge + safetyRemovalMargin) {
-                removeCar(car);
-            } else if ((car.direction === 'west' || car.direction === 'south') && car.position < containerEdge - safetyRemovalMargin) {
-                removeCar(car);
+            } else {
+                // Safety net removal if car goes way off-screen
+                const safetyMargin = 80;
+                if ((car.direction === 'east' || car.direction === 'north') && car.position > containerEdge + safetyMargin) {
+                    removeCar(car);
+                } else if ((car.direction === 'west' || car.direction === 'south') && car.position < containerEdge - safetyMargin) {
+                    removeCar(car);
+                }
             }
         }
     });
