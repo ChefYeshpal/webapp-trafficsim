@@ -105,9 +105,9 @@ function spawnCar(direction = null) {
         baseSpeed: baseSpeed,
         currentSpeed: 0,
         targetSpeed: baseSpeed,
-        accelFactor: 0.25, // acceleration smoothing (increased for faster response)
+        accelFactor: 0.4, // acceleration smoothing (high for very smooth response)
         stopped: false,
-        desiredGap: 50, // px gap to keep from car ahead
+        desiredGap: 70, // px gap to keep from car ahead
         fadeState: {
             fadingIn: true,
             fadingOut: false,
@@ -201,26 +201,9 @@ function moveCars() {
 
             car.targetSpeed = car.baseSpeed;
             
-            // Check spacing with car in front - only if they're on the same path segment
-            if (frontCar && car.pathSegment === frontCar.pathSegment) {
-                const axis = Array.isArray(car.config.axis) ? car.config.axis[car.pathSegment] : car.config.axis;
-                let distance;
-                
-                if (axis === 'x') {
-                    distance = Math.abs(frontCar.position.x - car.position.x);
-                } else {
-                    distance = Math.abs(frontCar.position.y - car.position.y);
-                }
-                
-                // If too close to car in front, slow down or stop
-                if (distance < car.desiredGap) {
-                    car.targetSpeed = 0;
-                } else if (distance < car.desiredGap * 1.5) {
-                    // Gradual slowdown
-                    car.targetSpeed = car.baseSpeed * 0.5;
-                }
-            } else if (frontCar && car.pathSegment === 0 && frontCar.pathSegment === 0) {
-                // Special case: both cars in initial segment before intersection
+            // Only check spacing in the initial approach segment (before intersection)
+            // Once cars pass the intersection, let them flow freely
+            if (frontCar && car.pathSegment === 0 && frontCar.pathSegment === 0) {
                 const axis = Array.isArray(car.config.axis) ? car.config.axis[0] : car.config.axis;
                 let distance;
                 
@@ -230,10 +213,11 @@ function moveCars() {
                     distance = Math.abs(frontCar.position.y - car.position.y);
                 }
                 
-                if (distance < car.desiredGap) {
+                // Only slow down if really close
+                if (distance < car.desiredGap * 0.8) {
                     car.targetSpeed = 0;
-                } else if (distance < car.desiredGap * 1.5) {
-                    car.targetSpeed = car.baseSpeed * 0.5;
+                } else if (distance < car.desiredGap * 1.2) {
+                    car.targetSpeed = car.baseSpeed * 0.6;
                 }
             }
 

@@ -39,9 +39,12 @@ Although, it will probably be much much simpler, with less logic involved as I c
         - It was taking entire U-turns for some reason, and the direction arrows weren't working well enough either.
         - Maybe will need to make a seperate JS script for this?
         - Will do it tmrw
-- 15 Oct 2025
+- 16 Oct 2025
     - I, for the past hour, have been trying to ADD A TURNING BULLSHIT into this, but do you know how hard it is? Honestly, I dont. It's too hard.
     - Changed the fade out animation for the vehicles, should fade out smoother now
     - Created a dedicated file for path functions, should maybe make it easier for me now?
-    - That's a;; that was really done, nothing new
-- 16 Oct 2025
+    - That's all that was really done, nothing new
+- 17 Oct 2025
+    - The turning shit finally works, it took another hour to set it up but basically:
+        - the car uses the getRandomDirection for an updated 12 paths, and randomly turns left or right.
+        - It's a little buggy, but oh well... it works aint it? I'm not gonna touch it.
