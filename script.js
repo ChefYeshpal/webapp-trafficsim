@@ -105,7 +105,7 @@ function spawnCar(direction = null) {
         baseSpeed: baseSpeed,
         currentSpeed: 0,
         targetSpeed: baseSpeed,
-        accelFactor: 0.12, // acceleration smoothing
+        accelFactor: 0.25, // acceleration smoothing (increased for faster response)
         stopped: false,
         desiredGap: 50, // px gap to keep from car ahead
         fadeState: {
@@ -201,8 +201,8 @@ function moveCars() {
 
             car.targetSpeed = car.baseSpeed;
             
-            // Check spacing with car in front
-            if (frontCar) {
+            // Check spacing with car in front - only if they're on the same path segment
+            if (frontCar && car.pathSegment === frontCar.pathSegment) {
                 const axis = Array.isArray(car.config.axis) ? car.config.axis[car.pathSegment] : car.config.axis;
                 let distance;
                 
@@ -217,6 +217,22 @@ function moveCars() {
                     car.targetSpeed = 0;
                 } else if (distance < car.desiredGap * 1.5) {
                     // Gradual slowdown
+                    car.targetSpeed = car.baseSpeed * 0.5;
+                }
+            } else if (frontCar && car.pathSegment === 0 && frontCar.pathSegment === 0) {
+                // Special case: both cars in initial segment before intersection
+                const axis = Array.isArray(car.config.axis) ? car.config.axis[0] : car.config.axis;
+                let distance;
+                
+                if (axis === 'x') {
+                    distance = Math.abs(frontCar.position.x - car.position.x);
+                } else {
+                    distance = Math.abs(frontCar.position.y - car.position.y);
+                }
+                
+                if (distance < car.desiredGap) {
+                    car.targetSpeed = 0;
+                } else if (distance < car.desiredGap * 1.5) {
                     car.targetSpeed = car.baseSpeed * 0.5;
                 }
             }
@@ -262,14 +278,16 @@ function moveCars() {
                         const direction = Math.sign(nextSegment.x - currentSegment.x);
                         car.position.x += direction * speedThisFrame;
                         if ((direction > 0 && car.position.x >= nextSegment.x) || (direction < 0 && car.position.x <= nextSegment.x)) {
-                            car.position.x = nextSegment.x;
+                            // Don't snap position - let it overshoot naturally
+                            // car.position.x = nextSegment.x;
                             moved = true;
                         }
                     } else { // axis === 'y'
                         const direction = Math.sign(nextSegment.y - currentSegment.y);
                         car.position.y += direction * speedThisFrame;
                         if ((direction > 0 && car.position.y >= nextSegment.y) || (direction < 0 && car.position.y <= nextSegment.y)) {
-                            car.position.y = nextSegment.y;
+                            // Don't snap position - let it overshoot naturally
+                            // car.position.y = nextSegment.y;
                             moved = true;
                         }
                     }
