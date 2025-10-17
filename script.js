@@ -87,15 +87,9 @@ function spawnCar(direction = null) {
     let blinker = null;
     if (dir.includes('-')) {
         blinker = document.createElement('div');
-        blinker.className = 'blinker';
-        // Determine left/right turn
-        // If second part is 'north' or 'west', it's a left turn; 'south' or 'east' is right turn
-        const turnDir = dir.split('-')[1];
-        if (turnDir === 'north' || turnDir === 'west') {
-            blinker.classList.add('left');
-        } else {
-            blinker.classList.add('right');
-        }
+        blinker.className = 'blinker front';
+        // Store turn direction for later use
+        carElement.dataset.turnDirection = dir.split('-')[1];
         carElement.appendChild(blinker);
     }
 
@@ -297,6 +291,11 @@ function moveCars() {
                             const newRotation = car.config.rotation[car.pathSegment];
                             if (newRotation !== undefined) {
                                 car.element.style.transform = `rotate(${newRotation}deg)`;
+                                // If blinker exists, ensure it's always at the front
+                                const blinker = car.element.querySelector('.blinker');
+                                if (blinker) {
+                                    blinker.style.transform = 'translateX(-50%)';
+                                }
                             }
                         }
                     }
