@@ -50,9 +50,9 @@ function getRandomColor() {
     return carColors[Math.floor(Math.random() * carColors.length)];
 }
 
-// Get random direction
+// Get random direction (with weighted probability for straight vs turning)
 function getRandomDirection() {
-    const directions = ['north', 'south', 'east', 'west'];
+    const directions = Object.keys(vehiclePaths);
     return directions[Math.floor(Math.random() * directions.length)];
 }
 
@@ -62,9 +62,10 @@ function spawnCar(direction = null) {
     const dir = direction || getRandomDirection();
 
     // Respect per-lane spawn allowance and max capacity
-    if (!laneAllowedToSpawn[dir]) return null;
-    if (lanes[dir].length >= 6) {
-        laneAllowedToSpawn[dir] = false;
+    const spawnLane = dir.split('-')[0];
+    if (!laneAllowedToSpawn[spawnLane]) return null;
+    if (lanes[spawnLane].length >= 6) {
+        laneAllowedToSpawn[spawnLane] = false;
         return null;
     }
 
@@ -79,7 +80,9 @@ function spawnCar(direction = null) {
     carElement.style.background = color;
     carElement.style.left = config.points[0].x + 'px';
     carElement.style.top = config.points[0].y + 'px';
-    carElement.style.transform = `rotate(${config.rotation}deg)`;
+    
+    const rotation = Array.isArray(config.rotation) ? config.rotation[0] : config.rotation;
+    carElement.style.transform = `rotate(${rotation}deg)`;
     
     const container = document.querySelector('.intersection-container');
     if (!container) return null;
@@ -90,12 +93,15 @@ function spawnCar(direction = null) {
     // Start with currentSpeed 0 and ease into target (baseSpeed)
     carElement.style.opacity = '0';
 
+    const axis = Array.isArray(config.axis) ? config.axis[0] : config.axis;
     const car = {
         id: id,
         element: carElement,
         direction: dir,
+        spawnLane: spawnLane,
         config: config,
-        position: config.axis === 'x' ? config.points[0].x : config.points[0].y,
+        position: { x: config.points[0].x, y: config.points[0].y },
+        pathSegment: 0,
         baseSpeed: baseSpeed,
         currentSpeed: 0,
         targetSpeed: baseSpeed,
@@ -112,8 +118,8 @@ function spawnCar(direction = null) {
     };
     
     cars.push(car);
-    lanes[dir].push(car);
-    updateLaneSpawnFlag(dir);
+    lanes[spawnLane].push(car);
+    updateLaneSpawnFlag(spawnLane);
     return car;
 }
 
@@ -122,10 +128,10 @@ function removeCar(car) {
     car.element.remove();
     cars = cars.filter(c => c.id !== car.id);
     // Remove from lane tracking
-    const laneArr = lanes[car.direction];
+    const laneArr = lanes[car.spawnLane];
     const idx = laneArr.findIndex(c => c.id === car.id);
     if (idx !== -1) laneArr.splice(idx, 1);
-    updateLaneSpawnFlag(car.direction);
+    updateLaneSpawnFlag(car.spawnLane);
 }
 
 // Check if car should stop at intersection
@@ -136,27 +142,28 @@ function shouldStop(car, predictedSpeed = null) {
         if (dir === 'north') return 'south';
         if (dir === 'south') return 'north';
         return dir;
-    })(car.direction);
+    })(car.spawnLane);
     const lightState = trafficLights[observedLightForDirection];
-    const stopPosition = car.config.axis === 'x' ? car.config.stopPos.x : car.config.stopPos.y;
+    
+    const axis = Array.isArray(car.config.axis) ? car.config.axis[0] : car.config.axis;
+    const stopPosition = axis === 'x' ? car.config.stopPos.x : car.config.stopPos.y;
     
     // Red light means stop
     if (lightState === 'red') {
-        const axis = car.config.axis;
-        const currentPos = car.position;
+        const currentPos = axis === 'x' ? car.position.x : car.position.y;
         const speedToUse = predictedSpeed !== null ? predictedSpeed : (car.currentSpeed || car.speed || 0);
         
         // Check if car is approaching the stop line (using predicted speed)
         if (axis === 'x') {
-            if (car.direction === 'east' && currentPos < stopPosition && currentPos + speedToUse >= stopPosition) {
+            if (car.spawnLane === 'east' && currentPos < stopPosition && currentPos + speedToUse >= stopPosition) {
                 return true;
-            } else if (car.direction === 'west' && currentPos > stopPosition && currentPos - speedToUse <= stopPosition) {
+            } else if (car.spawnLane === 'west' && currentPos > stopPosition && currentPos - speedToUse <= stopPosition) {
                 return true;
             }
         } else { // axis === 'y'
-            if (car.direction === 'south' && currentPos > stopPosition && currentPos - speedToUse <= stopPosition) {
+            if (car.spawnLane === 'south' && currentPos > stopPosition && currentPos - speedToUse <= stopPosition) {
                 return true;
-            } else if (car.direction === 'north' && currentPos < stopPosition && currentPos + speedToUse >= stopPosition) {
+            } else if (car.spawnLane === 'north' && currentPos < stopPosition && currentPos + speedToUse >= stopPosition) {
                 return true;
             }
         }
@@ -177,102 +184,111 @@ function moveCars() {
         const laneCars = lanes[direction];
         // Sort by position along movement axis: front-most first
         laneCars.sort((a, b) => {
-            if (a.config.axis === 'x') {
-                // east increases x, west decreases x
-                if (direction === 'east') return b.position - a.position; // front is larger x
-                return a.position - b.position; // west: front is smaller x
-            } else { // 'y'
-                // north increases y, south decreases y
-                if (direction === 'north') return b.position - a.position; // front is larger y
-                return a.position - b.position; // south: front is smaller y
-            }
+            const aPos = (Array.isArray(a.config.axis) ? a.position[a.config.axis[0]] : a.position);
+            const bPos = (Array.isArray(b.config.axis) ? b.position[b.config.axis[0]] : b.position);
+
+            if (direction === 'east') return bPos - aPos; // front is larger x
+            if (direction === 'west') return aPos - bPos; // west: front is smaller x
+            if (direction === 'north') return bPos - aPos; // front is larger y
+            if (direction === 'south') return aPos - bPos; // south: front is smaller y
+            return 0;
         });
 
         for (let i = 0; i < laneCars.length; i++) {
             const car = laneCars[i];
-
-            // Determine front car (if any)
             const frontCar = i === 0 ? null : laneCars[i - 1];
-
-            // Movement & stopping logic with easing
-            // Use baseSpeed as the predicted movement for approach checks
             const predictedSpeed = car.baseSpeed;
 
-            // Reset targetSpeed to base by default; will be zeroed if stopped
             car.targetSpeed = car.baseSpeed;
-
-            // First, check red light stopping behavior at intersection
-            if (shouldStop(car, predictedSpeed)) {
-                car.stopped = true;
-                car.targetSpeed = 0;
-                const stopPos = car.config.axis === 'x' ? car.config.stopPos.x : car.config.stopPos.y;
-                car.position = stopPos;
-            } else {
-                car.stopped = false;
-
-                // Tentative movement using predictedSpeed for collision checks
-                let proposedPos = car.position;
-                if (car.direction === 'east' || car.direction === 'north') {
-                    proposedPos += predictedSpeed;
+            
+            // Check spacing with car in front
+            if (frontCar) {
+                const axis = Array.isArray(car.config.axis) ? car.config.axis[car.pathSegment] : car.config.axis;
+                let distance;
+                
+                if (axis === 'x') {
+                    distance = Math.abs(frontCar.position.x - car.position.x);
                 } else {
-                    proposedPos -= predictedSpeed;
+                    distance = Math.abs(frontCar.position.y - car.position.y);
                 }
-
-                // If there is a car ahead, ensure we don't get closer than desiredGap
-                if (frontCar) {
-                    const distanceBetween = Math.abs(frontCar.position - proposedPos);
-                    const minAllowed = car.desiredGap;
-                    if (distanceBetween <= minAllowed) {
-                        // Stay behind front car at min gap and stop
-                        if (frontCar.position > proposedPos) {
-                            proposedPos = frontCar.position - minAllowed;
-                        } else {
-                            proposedPos = frontCar.position + minAllowed;
-                        }
-                        car.targetSpeed = 0;
-                        car.stopped = true;
-                    }
+                
+                // If too close to car in front, slow down or stop
+                if (distance < car.desiredGap) {
+                    car.targetSpeed = 0;
+                } else if (distance < car.desiredGap * 1.5) {
+                    // Gradual slowdown
+                    car.targetSpeed = car.baseSpeed * 0.5;
                 }
-
-                // Update position based on currentSpeed (which will be eased toward targetSpeed below)
-                // We'll update position after easing currentSpeed
-                car.nextProposedPosition = proposedPos;
             }
 
-            // Ease currentSpeed towards targetSpeed
+            if (car.pathSegment === 0 && shouldStop(car, predictedSpeed)) {
+                car.stopped = true;
+                car.targetSpeed = 0;
+                const axis = Array.isArray(car.config.axis) ? car.config.axis[0] : car.config.axis;
+                if (axis === 'x') {
+                    car.position.x = car.config.stopPos.x;
+                } else {
+                    car.position.y = car.config.stopPos.y;
+                }
+            } else {
+                car.stopped = false;
+            }
+
             car.currentSpeed += (car.targetSpeed - car.currentSpeed) * car.accelFactor;
             const speedThisFrame = car.currentSpeed;
 
-            // If we have a nextProposedPosition from collision checks, prefer it
-            if (car.hasOwnProperty('nextProposedPosition')) {
-                // Move toward nextProposedPosition but not overshoot
-                const desired = car.nextProposedPosition;
-                // If moving in increasing direction
-                if (car.direction === 'east' || car.direction === 'north') {
-                    const maxMove = speedThisFrame;
-                    car.position = Math.min(desired, car.position + maxMove);
-                } else {
-                    const maxMove = speedThisFrame;
-                    car.position = Math.max(desired, car.position - maxMove);
-                }
-                delete car.nextProposedPosition;
+            if (car.stopped) {
+                // a stopped car does not move.
             } else {
-                // Normal movement
-                if (car.direction === 'east' || car.direction === 'north') {
-                    car.position += speedThisFrame;
+                let currentSegment = car.config.points[car.pathSegment];
+                let nextSegment = car.config.points[car.pathSegment + 1];
+
+                if (!nextSegment) {
+                    // End of path, continue moving straight to exit
+                    const lastAxis = Array.isArray(car.config.axis) ? car.config.axis[car.config.axis.length - 1] : car.config.axis;
+                    const lastRotation = Array.isArray(car.config.rotation) ? car.config.rotation[car.config.rotation.length - 1] : car.config.rotation;
+
+                    if (lastAxis === 'x') {
+                        car.position.x += Math.cos(lastRotation * Math.PI / 180) * speedThisFrame;
+                    } else {
+                        car.position.y += Math.sin(lastRotation * Math.PI / 180) * speedThisFrame;
+                    }
+
                 } else {
-                    car.position -= speedThisFrame;
+                    const axis = Array.isArray(car.config.axis) ? car.config.axis[car.pathSegment] : car.config.axis;
+                    let moved = false;
+
+                    if (axis === 'x') {
+                        const direction = Math.sign(nextSegment.x - currentSegment.x);
+                        car.position.x += direction * speedThisFrame;
+                        if ((direction > 0 && car.position.x >= nextSegment.x) || (direction < 0 && car.position.x <= nextSegment.x)) {
+                            car.position.x = nextSegment.x;
+                            moved = true;
+                        }
+                    } else { // axis === 'y'
+                        const direction = Math.sign(nextSegment.y - currentSegment.y);
+                        car.position.y += direction * speedThisFrame;
+                        if ((direction > 0 && car.position.y >= nextSegment.y) || (direction < 0 && car.position.y <= nextSegment.y)) {
+                            car.position.y = nextSegment.y;
+                            moved = true;
+                        }
+                    }
+
+                    if (moved) {
+                        car.pathSegment++;
+                        if (Array.isArray(car.config.rotation)) {
+                            const newRotation = car.config.rotation[car.pathSegment];
+                            if (newRotation !== undefined) {
+                                car.element.style.transform = `rotate(${newRotation}deg)`;
+                            }
+                        }
+                    }
                 }
             }
 
-            // Update visual position
-            if (car.config.axis === 'x') {
-                car.element.style.left = car.position + 'px';
-            } else {
-                car.element.style.top = car.position + 'px';
-            }
+            car.element.style.left = car.position.x + 'px';
+            car.element.style.top = car.position.y + 'px';
 
-            // --- Fading Logic ---
             const now = performance.now();
             const fade = car.fadeState;
 
@@ -286,53 +302,14 @@ function moveCars() {
                 }
             }
 
-            // Check if car should start fading out
-            const containerEdge = (car.config.axis === 'x')
-                ? (car.direction === 'east' ? 600 : 0)
-                : (car.direction === 'north' ? 600 : 0);
-            
-            const fadeOutStartDistance = 80; // px from edge to start fading
-            let distToEdge;
-            if (car.direction === 'east' || car.direction === 'north') {
-                distToEdge = containerEdge - car.position;
-            } else {
-                distToEdge = car.position - containerEdge;
-            }
-
-            if (!fade.fadingOut && distToEdge <= fadeOutStartDistance) {
-                fade.fadingOut = true;
-                fade.startTime = now;
-                fade.duration = 500; // fade out a bit slower
-            }
-
-            if (fade.fadingOut) {
-                const elapsed = now - fade.startTime;
-                if (elapsed < fade.duration) {
-                    fade.opacity = 1 - (elapsed / fade.duration);
-                } else {
-                    fade.opacity = 0;
-                }
-            }
-            
-            car.element.style.opacity = Math.max(0, Math.min(1, fade.opacity)).toString();
-
-            // Remove car when fully faded out
-            if (fade.fadingOut && fade.opacity <= 0) {
+            if (car.position.x > 650 || car.position.x < -50 || car.position.y > 650 || car.position.y < -50) {
                 removeCar(car);
             } else {
-                // Safety net removal if car goes way off-screen
-                const safetyMargin = 80;
-                if ((car.direction === 'east' || car.direction === 'north') && car.position > containerEdge + safetyMargin) {
-                    removeCar(car);
-                } else if ((car.direction === 'west' || car.direction === 'south') && car.position < containerEdge - safetyMargin) {
-                    removeCar(car);
-                }
+                car.element.style.opacity = Math.max(0, Math.min(1, fade.opacity)).toString();
             }
         }
     });
 }
-
-// (viewport-scaling removed — game uses fixed layout; fade-out behavior remains)
 
 // Update whether a lane is allowed to spawn based on count and hysteresis
 function updateLaneSpawnFlag(direction) {
@@ -383,13 +360,8 @@ function startCarSpawning() {
         if (isPaused) return;
         // Try spawn with 80% probability
         if (Math.random() < 0.8) {
-            // Choose a direction but prefer allowed lanes
-            const directions = ['north', 'south', 'east', 'west'];
-            const allowed = directions.filter(d => laneAllowedToSpawn[d] && lanes[d].length < 6);
-            const pool = allowed.length ? allowed : directions.filter(d => lanes[d].length < 6);
-            const poolFinal = pool.length ? pool : directions; // fallback
-            const dir = poolFinal[Math.floor(Math.random() * poolFinal.length)];
-            spawnCar(dir);
+            // Get a random direction from all available paths
+            spawnCar();
         }
     }, 2000);
 }
