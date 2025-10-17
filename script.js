@@ -80,10 +80,25 @@ function spawnCar(direction = null) {
     carElement.style.background = color;
     carElement.style.left = config.points[0].x + 'px';
     carElement.style.top = config.points[0].y + 'px';
-    
     const rotation = Array.isArray(config.rotation) ? config.rotation[0] : config.rotation;
     carElement.style.transform = `rotate(${rotation}deg)`;
-    
+
+    // Add blinker if turning
+    let blinker = null;
+    if (dir.includes('-')) {
+        blinker = document.createElement('div');
+        blinker.className = 'blinker';
+        // Determine left/right turn
+        // If second part is 'north' or 'west', it's a left turn; 'south' or 'east' is right turn
+        const turnDir = dir.split('-')[1];
+        if (turnDir === 'north' || turnDir === 'west') {
+            blinker.classList.add('left');
+        } else {
+            blinker.classList.add('right');
+        }
+        carElement.appendChild(blinker);
+    }
+
     const container = document.querySelector('.intersection-container');
     if (!container) return null;
     container.appendChild(carElement);
