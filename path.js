@@ -6,7 +6,7 @@ const vehiclePaths = {
         ],
         stopPos: { x: 180, y: 250 },
         rotation: 0,
-        axis: 'x' // Primary axis of movement
+        axis: 'x'
     },
     west: {
         points: [
@@ -14,7 +14,7 @@ const vehiclePaths = {
             { x: -40, y: 325 }
         ],
         stopPos: { x: 390, y: 325 },
-        rotation: 180, // Visually, the car sprite is already facing left/right
+        rotation: 180,
         axis: 'x'
     },
     north: {
@@ -28,7 +28,7 @@ const vehiclePaths = {
     },
     south: {
         points: [
-            { x: 300, y: 560 },
+            { x: 310, y: 560 },
             { x: 300, y: -40 }
         ],
         stopPos: { x: 300, y: 390 },
