@@ -50,4 +50,7 @@ Although, it will probably be much much simpler, with less logic involved as I c
         - It's a little buggy, but oh well... it works aint it? I'm not gonna touch it.
     - Added blinkers, it's just a basic circle beside the cars for now but will update it later on to look more "blinker like"
 - 18 Oct 2025
+    - Updated the commments to use the idea of "why" rather than "how it works"
+    - Removed the fade out effect, cars just cross the border now
+    - Cars cannot overtake one another anymore
     - 
