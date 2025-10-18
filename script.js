@@ -17,7 +17,7 @@ const lanes = {
     south: []
 };
 
-// Prevents lane overcrowding by pausing spawns above threshold, resuming below lower threshold
+// prevent lane overcrowding by pausing spawns above threshold, resuming below lower threshold
 const laneAllowedToSpawn = {
     east: true,
     west: true,
@@ -163,12 +163,23 @@ function shouldStop(car, predictedSpeed = null) {
 }
 
 function moveCars() {
-    // Front-to-back order ensures following cars see accurate lead car positions
+    // ascending order for cars count
     Object.keys(lanes).forEach(direction => {
         const laneCars = lanes[direction];
+        
+        // Sort by path progress: higher pathSegment = further ahead, then by position within segment
         laneCars.sort((a, b) => {
-            const aPos = Array.isArray(a.config.axis) ? a.position[a.config.axis[0]] : a.position;
-            const bPos = Array.isArray(b.config.axis) ? b.position[b.config.axis[0]] : b.position;
+            // compare by path segment (further along the path = in front)
+            if (a.pathSegment !== b.pathSegment) {
+                return b.pathSegment - a.pathSegment;
+            }
+            
+            // If on same segment, sort by position along current axis
+            const aAxis = Array.isArray(a.config.axis) ? a.config.axis[a.pathSegment] : a.config.axis;
+            const bAxis = Array.isArray(b.config.axis) ? b.config.axis[b.pathSegment] : b.config.axis;
+            
+            const aPos = aAxis === 'x' ? a.position.x : a.position.y;
+            const bPos = bAxis === 'x' ? b.position.x : b.position.y;
 
             if (direction === 'east') return bPos - aPos;
             if (direction === 'west') return aPos - bPos;
@@ -184,23 +195,27 @@ function moveCars() {
 
             car.targetSpeed = car.baseSpeed;
             
-            // Spacing only matters before intersection, post-intersection cars exit freely
-            if (frontCar && car.pathSegment === 0 && frontCar.pathSegment === 0) {
-                const axis = Array.isArray(car.config.axis) ? car.config.axis[0] : car.config.axis;
-                let distance;
+            // spacing and stuff b/w cars
+            if (frontCar) {
+                // calc actual distance between cars using Euclidean distance
+                const dx = frontCar.position.x - car.position.x;
+                const dy = frontCar.position.y - car.position.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
 
-                if (axis === 'x') {
-                    distance = Math.abs(frontCar.position.x - car.position.x);
-                } else {
-                    distance = Math.abs(frontCar.position.y - car.position.y);
-                }
+                // prevent clipping
+                const effectiveGap = (frontCar.pathSegment > 0 || car.pathSegment > 0) 
+                    ? car.desiredGap * 1.3 
+                    : car.desiredGap;
 
-                // Gradual speed reduction
-                // for case of distance is less than the desired gap, the car slows down or stops
-                if (distance < car.desiredGap * 0.8) {
+                // speed control to prevent overlaps
+                if (distance < effectiveGap * 0.9) {
                     car.targetSpeed = 0; 
-                } else if (distance < car.desiredGap * 1.2) {
-                    car.targetSpeed = Math.min(car.targetSpeed, frontCar.currentSpeed * 0.9);
+                } else if (distance < effectiveGap * 1.1) {
+                    car.targetSpeed = Math.min(car.targetSpeed, frontCar.currentSpeed * 0.6);
+                } else if (distance < effectiveGap * 1.3) {
+                    car.targetSpeed = Math.min(car.targetSpeed, frontCar.currentSpeed * 0.85);
+                } else if (distance < effectiveGap * 1.5) {
+                    car.targetSpeed = Math.min(car.targetSpeed, frontCar.currentSpeed * 1.0);
                 }
             }
 
@@ -227,7 +242,6 @@ function moveCars() {
                 let nextSegment = car.config.points[car.pathSegment + 1];
 
                 if (!nextSegment) {
-                    // Path complete, continue straight off-screen for exit
                     const lastAxis = Array.isArray(car.config.axis) ? car.config.axis[car.config.axis.length - 1] : car.config.axis;
                     const lastRotation = Array.isArray(car.config.rotation) ? car.config.rotation[car.config.rotation.length - 1] : car.config.rotation;
 
