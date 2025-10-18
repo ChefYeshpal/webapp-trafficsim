@@ -83,13 +83,14 @@ function spawnCar(direction = null) {
     const rotation = Array.isArray(config.rotation) ? config.rotation[0] : config.rotation;
     carElement.style.transform = `rotate(${rotation}deg)`;
 
-    // Add blinker if turning
+    // Add blinker using path config (from path.js)
     let blinker = null;
-    if (dir.includes('-')) {
+    if (config && config.blinker && config.blinker.enabled) {
         blinker = document.createElement('div');
         blinker.className = 'blinker front';
-        // Store turn direction for later use
-        carElement.dataset.turnDirection = dir.split('-')[1];
+        if (typeof config.blinker.offsetY === 'number') {
+            blinker.style.top = `${config.blinker.offsetY}px`;
+        }
         carElement.appendChild(blinker);
     }
 
@@ -291,11 +292,6 @@ function moveCars() {
                             const newRotation = car.config.rotation[car.pathSegment];
                             if (newRotation !== undefined) {
                                 car.element.style.transform = `rotate(${newRotation}deg)`;
-                                // If blinker exists, ensure it's always at the front
-                                const blinker = car.element.querySelector('.blinker');
-                                if (blinker) {
-                                    blinker.style.transform = 'translateX(-50%)';
-                                }
                             }
                         }
                     }

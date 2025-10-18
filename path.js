@@ -16,7 +16,8 @@ const vehiclePaths = {
         ],
         stopPos: { x: 180, y: 250 },
         rotation: [0, -90],
-        axis: ['x', 'y']
+        axis: ['x', 'y'],
+        blinker: { enabled: true, position: 'front', offsetY: -12 }
     },
     'east-south': {
         points: [
@@ -26,7 +27,8 @@ const vehiclePaths = {
         ],
         stopPos: { x: 180, y: 250 },
         rotation: [0, 90],
-        axis: ['x', 'y']
+        axis: ['x', 'y'],
+        blinker: { enabled: true, position: 'front', offsetY: -12 }
     },
     west: {
         points: [
@@ -45,7 +47,8 @@ const vehiclePaths = {
         ],
         stopPos: { x: 390, y: 325 },
         rotation: [180, 90],
-        axis: ['x', 'y']
+        axis: ['x', 'y'],
+        blinker: { enabled: true, position: 'front', offsetY: -12 }
     },
     'west-north': {
         points: [
@@ -55,7 +58,8 @@ const vehiclePaths = {
         ],
         stopPos: { x: 390, y: 325 },
         rotation: [180, -90],
-        axis: ['x', 'y']
+        axis: ['x', 'y'],
+        blinker: { enabled: true, position: 'front', offsetY: -12 }
     },
     north: {
         points: [
@@ -74,7 +78,8 @@ const vehiclePaths = {
         ],
         stopPos: { x: 250, y: 180 },
         rotation: [90, 180],
-        axis: ['y', 'x']
+        axis: ['y', 'x'],
+        blinker: { enabled: true, position: 'front', offsetY: -12 }
     },
     'north-east': {
         points: [
@@ -84,7 +89,8 @@ const vehiclePaths = {
         ],
         stopPos: { x: 250, y: 180 },
         rotation: [90, 0],
-        axis: ['y', 'x']
+        axis: ['y', 'x'],
+        blinker: { enabled: true, position: 'front', offsetY: -12 }
     },
     south: {
         points: [
@@ -103,7 +109,8 @@ const vehiclePaths = {
         ],
         stopPos: { x: 310, y: 390 },
         rotation: [-90, 0],
-        axis: ['y', 'x']
+        axis: ['y', 'x'],
+        blinker: { enabled: true, position: 'front', offsetY: -12 }
     },
     'south-west': {
         points: [
@@ -113,6 +120,7 @@ const vehiclePaths = {
         ],
         stopPos: { x: 310, y: 390 },
         rotation: [-90, 180],
-        axis: ['y', 'x']
+        axis: ['y', 'x'],
+        blinker: { enabled: true, position: 'front', offsetY: -12 }
     }
 };
