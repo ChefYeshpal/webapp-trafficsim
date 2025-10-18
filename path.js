@@ -15,7 +15,7 @@ const vehiclePaths = {
             { x: 300, y: -40 }
         ],
         stopPos: { x: 180, y: 250 },
-        rotation: [0, -90],
+        rotation: [0, 270],
         axis: ['x', 'y']
     },
     'east-south': {
