@@ -45,7 +45,7 @@ const carColors = [
 // Direction configurations are now in path.js as vehiclePaths
 const directionConfigs = vehiclePaths;
 
-// Get random color
+// Get a random color from the given paletter
 function getRandomColor() {
     return carColors[Math.floor(Math.random() * carColors.length)];
 }
@@ -56,7 +56,6 @@ function getRandomDirection() {
     return directions[Math.floor(Math.random() * directions.length)];
 }
 
-// Create a new car
 // Create a new car (optionally specify direction)
 function spawnCar(direction = null) {
     const dir = direction || getRandomDirection();
@@ -86,8 +85,8 @@ function spawnCar(direction = null) {
     container.appendChild(carElement);
     
     // Create car object
-    const baseSpeed = 1 + Math.random() * 1; // Random base speed between 1-2
-    // Start with currentSpeed 0 and ease into target (baseSpeed)
+    const baseSpeed = 1 + Math.random() * 1;
+    // Start with currentSpeed 0 and then ease into target (baseSpeed)
     carElement.style.opacity = '0';
 
     const car = {
@@ -99,14 +98,14 @@ function spawnCar(direction = null) {
         baseSpeed: baseSpeed,
         currentSpeed: 0,
         targetSpeed: baseSpeed,
-        accelFactor: 0.12, // acceleration smoothing
+        accelFactor: 0.12,
         stopped: false,
-        desiredGap: 50, // px gap to keep from car ahead
+        desiredGap: 50,
         fadeState: {
             fadingIn: true,
             fadingOut: false,
             opacity: 0,
-            duration: 250, // ms for fade
+            duration: 250, 
             startTime: performance.now()
         }
     };
@@ -235,7 +234,6 @@ function moveCars() {
                 }
 
                 // Update position based on currentSpeed (which will be eased toward targetSpeed below)
-                // We'll update position after easing currentSpeed
                 car.nextProposedPosition = proposedPos;
             }
 
@@ -272,7 +270,7 @@ function moveCars() {
                 car.element.style.top = car.position + 'px';
             }
 
-            // --- Fading Logic ---
+            // Fading Logic
             const now = performance.now();
             const fade = car.fadeState;
 
@@ -291,7 +289,7 @@ function moveCars() {
                 ? (car.direction === 'east' ? 600 : 0)
                 : (car.direction === 'north' ? 600 : 0);
             
-            const fadeOutStartDistance = 80; // px from edge to start fading
+            const fadeOutStartDistance = 90;
             let distToEdge;
             if (car.direction === 'east' || car.direction === 'north') {
                 distToEdge = containerEdge - car.position;
@@ -302,7 +300,7 @@ function moveCars() {
             if (!fade.fadingOut && distToEdge <= fadeOutStartDistance) {
                 fade.fadingOut = true;
                 fade.startTime = now;
-                fade.duration = 500; // fade out a bit slower
+                fade.duration = 500;
             }
 
             if (fade.fadingOut) {
@@ -320,7 +318,7 @@ function moveCars() {
             if (fade.fadingOut && fade.opacity <= 0) {
                 removeCar(car);
             } else {
-                // Safety net removal if car goes way off-screen
+                // Safety net removal if car goes way off screen
                 const safetyMargin = 80;
                 if ((car.direction === 'east' || car.direction === 'north') && car.position > containerEdge + safetyMargin) {
                     removeCar(car);
@@ -332,7 +330,7 @@ function moveCars() {
     });
 }
 
-// (viewport-scaling removed — game uses fixed layout; fade-out behavior remains)
+// (viewport-scaling removed, game uses fixed layout; fade-out behavior remains)
 
 // Update whether a lane is allowed to spawn based on count and hysteresis
 function updateLaneSpawnFlag(direction) {
