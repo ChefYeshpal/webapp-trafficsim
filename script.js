@@ -184,22 +184,23 @@ function moveCars() {
 
             car.targetSpeed = car.baseSpeed;
             
-            // Spacing only matters before intersection; post-intersection cars exit freely
+            // Spacing only matters before intersection, post-intersection cars exit freely
             if (frontCar && car.pathSegment === 0 && frontCar.pathSegment === 0) {
                 const axis = Array.isArray(car.config.axis) ? car.config.axis[0] : car.config.axis;
                 let distance;
-                
+
                 if (axis === 'x') {
                     distance = Math.abs(frontCar.position.x - car.position.x);
                 } else {
                     distance = Math.abs(frontCar.position.y - car.position.y);
                 }
 
-                // Gradual speed reduction prevents abrupt stops and adds realism
+                // Gradual speed reduction
+                // for case of distance is less than the desired gap, the car slows down or stops
                 if (distance < car.desiredGap * 0.8) {
-                    car.targetSpeed = 0;
+                    car.targetSpeed = 0; 
                 } else if (distance < car.desiredGap * 1.2) {
-                    car.targetSpeed = car.baseSpeed * 0.6;
+                    car.targetSpeed = Math.min(car.targetSpeed, frontCar.currentSpeed * 0.9);
                 }
             }
 
@@ -226,7 +227,7 @@ function moveCars() {
                 let nextSegment = car.config.points[car.pathSegment + 1];
 
                 if (!nextSegment) {
-                    // Path complete, continue straight off-screen for natural exit
+                    // Path complete, continue straight off-screen for exit
                     const lastAxis = Array.isArray(car.config.axis) ? car.config.axis[car.config.axis.length - 1] : car.config.axis;
                     const lastRotation = Array.isArray(car.config.rotation) ? car.config.rotation[car.config.rotation.length - 1] : car.config.rotation;
 
@@ -269,23 +270,12 @@ function moveCars() {
             car.element.style.left = car.position.x + 'px';
             car.element.style.top = car.position.y + 'px';
 
-            const now = performance.now();
-            const fade = car.fadeState;
-
-            if (fade.fadingIn) {
-                const elapsed = now - fade.startTime;
-                if (elapsed < fade.duration) {
-                    fade.opacity = elapsed / fade.duration;
-                } else {
-                    fade.opacity = 1;
-                    fade.fadingIn = false;
-                }
-            }
+            
+            car.element.style.opacity = '1'; 
+            delete car.fadeState; 
 
             if (car.position.x > 650 || car.position.x < -50 || car.position.y > 650 || car.position.y < -50) {
                 removeCar(car);
-            } else {
-                car.element.style.opacity = Math.max(0, Math.min(1, fade.opacity)).toString();
             }
         }
     });
