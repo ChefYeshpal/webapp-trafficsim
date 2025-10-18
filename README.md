@@ -48,3 +48,6 @@ Although, it will probably be much much simpler, with less logic involved as I c
     - The turning shit finally works, it took another hour to set it up but basically:
         - the car uses the getRandomDirection for an updated 12 paths, and randomly turns left or right.
         - It's a little buggy, but oh well... it works aint it? I'm not gonna touch it.
+    - Added blinkers, it's just a basic circle beside the cars for now but will update it later on to look more "blinker like"
+- 18 Oct 2025
+    - 
