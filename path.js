@@ -16,8 +16,7 @@ const vehiclePaths = {
         ],
         stopPos: { x: 180, y: 250 },
         rotation: [0, -90],
-        axis: ['x', 'y'],
-        blinker: { enabled: true, position: 'front', offsetY: -12 }
+        axis: ['x', 'y']
     },
     'east-south': {
         points: [
@@ -27,8 +26,7 @@ const vehiclePaths = {
         ],
         stopPos: { x: 180, y: 250 },
         rotation: [0, 90],
-        axis: ['x', 'y'],
-        blinker: { enabled: true, position: 'front', offsetY: -12 }
+        axis: ['x', 'y']
     },
     west: {
         points: [
@@ -47,8 +45,7 @@ const vehiclePaths = {
         ],
         stopPos: { x: 390, y: 325 },
         rotation: [180, 90],
-        axis: ['x', 'y'],
-        blinker: { enabled: true, position: 'front', offsetY: -12 }
+        axis: ['x', 'y']
     },
     'west-north': {
         points: [
@@ -58,8 +55,7 @@ const vehiclePaths = {
         ],
         stopPos: { x: 390, y: 325 },
         rotation: [180, -90],
-        axis: ['x', 'y'],
-        blinker: { enabled: true, position: 'front', offsetY: -12 }
+        axis: ['x', 'y']
     },
     north: {
         points: [
@@ -78,8 +74,7 @@ const vehiclePaths = {
         ],
         stopPos: { x: 250, y: 180 },
         rotation: [90, 180],
-        axis: ['y', 'x'],
-        blinker: { enabled: true, position: 'front', offsetY: -12 }
+        axis: ['y', 'x']
     },
     'north-east': {
         points: [
@@ -89,8 +84,7 @@ const vehiclePaths = {
         ],
         stopPos: { x: 250, y: 180 },
         rotation: [90, 0],
-        axis: ['y', 'x'],
-        blinker: { enabled: true, position: 'front', offsetY: -12 }
+        axis: ['y', 'x']
     },
     south: {
         points: [
@@ -109,8 +103,7 @@ const vehiclePaths = {
         ],
         stopPos: { x: 310, y: 390 },
         rotation: [-90, 0],
-        axis: ['y', 'x'],
-        blinker: { enabled: true, position: 'front', offsetY: -12 }
+        axis: ['y', 'x']
     },
     'south-west': {
         points: [
@@ -120,36 +113,6 @@ const vehiclePaths = {
         ],
         stopPos: { x: 310, y: 390 },
         rotation: [-90, 180],
-        axis: ['y', 'x'],
-        blinker: { enabled: true, position: 'front', offsetY: -12 }
+        axis: ['y', 'x']
     }
 };
-
-
-
-/**
- * Attaches a blinker to a car element based on the path configuration.
- * @param {HTMLElement} carElement - The car DOM element to attach the blinker to.
- * @param {Object} pathConfig - The configuration object for the car's path.
- * @returns {HTMLElement|null} - The created blinker element, or null if no blinker is needed.
- */
-function createBlinker(carElement, pathConfig) {
-    if (!pathConfig || !pathConfig.blinker || !pathConfig.blinker.enabled) {
-        return null;
-    }
-
-    // Create the blinker element (a tiny glowing div)
-    const blinker = document.createElement('div');
-    blinker.className = 'blinker front'; // CSS handles the blinking animation
-    
-    // Position the blinker vertically on the car
-    // offsetY determines how high/low it sits (negative = above car top)
-    if (typeof pathConfig.blinker.offsetY === 'number') {
-        blinker.style.top = `${pathConfig.blinker.offsetY}px`;
-    }
-    
-    // Attach it to the car (it'll move and rotate with the car)
-    carElement.appendChild(blinker);
-    
-    return blinker;
-}

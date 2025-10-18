@@ -81,9 +81,6 @@ function spawnCar(direction = null) {
     const rotation = Array.isArray(config.rotation) ? config.rotation[0] : config.rotation;
     carElement.style.transform = `rotate(${rotation}deg)`;
 
-    // Add blinker if this path requires one (handled by createBlinker in path.js)
-    const blinker = createBlinker(carElement, config);
-
     const container = document.querySelector('.intersection-container');
     if (!container) return null;
     container.appendChild(carElement);
