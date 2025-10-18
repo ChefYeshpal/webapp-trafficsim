@@ -53,4 +53,9 @@ Although, it will probably be much much simpler, with less logic involved as I c
     - Updated the commments to use the idea of "why" rather than "how it works"
     - Removed the fade out effect, cars just cross the border now
     - Cars cannot overtake one another anymore
+    - Fixed the car spinny thing that occured right after some turned
+        - Just changed E-N rotation to [0, 270]
+        - It was [0 -90] before, so the problem was probably that it spun to 90 deg first then kept going until it aligned and could go forwards
+    - Fixed overlapping of cars
+        - Cars kept overlapping after taking turn for somereason, apparently I gotta make sure it ALWAYS reads the distance from the cars...
     - 
