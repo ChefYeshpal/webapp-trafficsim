@@ -9,20 +9,16 @@
 <body>
     <div class="game-container">
         <h1>Traffic Signal Shabing</h1>
-        <!-- Pause/resume button -->
+        
         <button id="pauseBtn" aria-pressed="false">Pause</button>
         
         <div class="intersection-container">
-            <!-- Horizontal Road -->
             <div class="road horizontal"></div>
             
-            <!-- Vertical Road -->
             <div class="road vertical"></div>
             
-            <!-- Intersection Box -->
             <div class="intersection"></div>
             
-            <!-- Traffic Lights -->
             <div class="traffic-light north" data-direction="north" onclick="toggleLight('north')">
                 <div class="light"></div>
             </div>
@@ -35,8 +31,6 @@
             <div class="traffic-light west" data-direction="west" onclick="toggleLight('west')">
                 <div class="light"></div>
             </div>
-            
-            <!-- Cars will be dynamically added here -->
         </div>
     </div>
     

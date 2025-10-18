@@ -1,4 +1,4 @@
-// Traffic light states: green = go, red = stop
+// Initial state needs E/W flowing, N/S stopped to avoid immediate gridlock
 const trafficLights = {
     north: 'red',
     south: 'red',
@@ -6,11 +6,10 @@ const trafficLights = {
     west: 'green'
 };
 
-// Array to store active cars
 let cars = [];
 let carIdCounter = 0;
 
-// Per-lane tracking to enforce limits and spacing
+// Separate lane tracking needed for independent spawn control and spacing logic per direction
 const lanes = {
     east: [],
     west: [],
@@ -18,7 +17,7 @@ const lanes = {
     south: []
 };
 
-// Spawn control per-lane (hysteresis): pause when >6, resume when <=3
+// Prevents lane overcrowding by pausing spawns above threshold, resuming below lower threshold
 const laneAllowedToSpawn = {
     east: true,
     west: true,
@@ -29,7 +28,7 @@ const laneAllowedToSpawn = {
 let isPaused = false;
 let spawnIntervalId = null;
 
-// Random color palette for cars
+// gradients to make individual cars distinguishable
 const carColors = [
     'linear-gradient(135deg, #e74c3c, #c0392b)', 
     'linear-gradient(135deg, #3498db, #2980b9)', 
@@ -41,25 +40,22 @@ const carColors = [
     'linear-gradient(135deg, #34495e, #2c3e50)', 
 ];
 
-// Direction configurations are now in path.js as vehiclePaths
+// Paths separated into dedicated module 
 const directionConfigs = vehiclePaths;
 
-// Get random color
 function getRandomColor() {
     return carColors[Math.floor(Math.random() * carColors.length)];
 }
 
-// Get random direction (with weighted probability for straight vs turning)
 function getRandomDirection() {
     const directions = Object.keys(vehiclePaths);
     return directions[Math.floor(Math.random() * directions.length)];
 }
 
-// Create a new car (optionally specify direction)
 function spawnCar(direction = null) {
     const dir = direction || getRandomDirection();
 
-    // Respect per-lane spawn allowance and max capacity
+    // Prevents visual clutter?
     const spawnLane = dir.split('-')[0];
     if (!laneAllowedToSpawn[spawnLane]) return null;
     if (lanes[spawnLane].length >= 6) {
@@ -71,7 +67,6 @@ function spawnCar(direction = null) {
     const color = getRandomColor();
     const id = `car-${carIdCounter++}`;
     
-    // Create car element
     const carElement = document.createElement('div');
     carElement.className = 'car';
     carElement.id = id;
@@ -85,9 +80,8 @@ function spawnCar(direction = null) {
     if (!container) return null;
     container.appendChild(carElement);
     
-    // Create car object
-    const baseSpeed = 1 + Math.random() * 1; // Random base speed between 1-2
-    // Start with currentSpeed 0 and ease into target (baseSpeed)
+    // variable speed
+    const baseSpeed = 1 + Math.random() * 1;
     carElement.style.opacity = '0';
 
     const axis = Array.isArray(config.axis) ? config.axis[0] : config.axis;
@@ -109,7 +103,7 @@ function spawnCar(direction = null) {
             fadingIn: true,
             fadingOut: false,
             opacity: 0,
-            duration: 250, // fade shii
+            duration: 250,
             startTime: performance.now()
         }
     };
@@ -120,21 +114,17 @@ function spawnCar(direction = null) {
     return car;
 }
 
-// Remove car from game
 function removeCar(car) {
     car.element.remove();
     cars = cars.filter(c => c.id !== car.id);
-    // Remove from lane tracking
     const laneArr = lanes[car.spawnLane];
     const idx = laneArr.findIndex(c => c.id === car.id);
     if (idx !== -1) laneArr.splice(idx, 1);
     updateLaneSpawnFlag(car.spawnLane);
 }
 
-// Check if car should stop at intersection
 function shouldStop(car, predictedSpeed = null) {
-    // Cars heading north/south should observe the opposite signal (i.e. the light on the far side)
-    // north cars look at 'south' light, south cars look at 'north' light. East/west remain unchanged.
+    // N/S cars observe far-side light to simulate real traffic signal placement
     const observedLightForDirection = (dir => {
         if (dir === 'north') return 'south';
         if (dir === 'south') return 'north';
@@ -145,19 +135,18 @@ function shouldStop(car, predictedSpeed = null) {
     const axis = Array.isArray(car.config.axis) ? car.config.axis[0] : car.config.axis;
     const stopPosition = axis === 'x' ? car.config.stopPos.x : car.config.stopPos.y;
     
-    // Red light means stop
     if (lightState === 'red') {
         const currentPos = axis === 'x' ? car.position.x : car.position.y;
         const speedToUse = predictedSpeed !== null ? predictedSpeed : (car.currentSpeed || car.speed || 0);
         
-        // Check if car is approaching the stop line (using predicted speed)
+        // Prediction prevents overshooting the stop line
         if (axis === 'x') {
             if (car.spawnLane === 'east' && currentPos < stopPosition && currentPos + speedToUse >= stopPosition) {
                 return true;
             } else if (car.spawnLane === 'west' && currentPos > stopPosition && currentPos - speedToUse <= stopPosition) {
                 return true;
             }
-        } else { // axis === y
+        } else {
             if (car.spawnLane === 'south' && currentPos > stopPosition && currentPos - speedToUse <= stopPosition) {
                 return true;
             } else if (car.spawnLane === 'north' && currentPos < stopPosition && currentPos + speedToUse >= stopPosition) {
@@ -165,7 +154,6 @@ function shouldStop(car, predictedSpeed = null) {
             }
         }
         
-        // If already stopped at the stop line
         if (car.stopped && Math.abs(currentPos - stopPosition) < 5) {
             return true;
         }
@@ -174,20 +162,18 @@ function shouldStop(car, predictedSpeed = null) {
     return false;
 }
 
-// Move all cars
 function moveCars() {
-    // For each lane, process cars front-to-back to maintain spacing
+    // Front-to-back order ensures following cars see accurate lead car positions
     Object.keys(lanes).forEach(direction => {
         const laneCars = lanes[direction];
-        // sort by position along movement axis: front-most first
         laneCars.sort((a, b) => {
-            const aPos = (Array.isArray(a.config.axis) ? a.position[a.config.axis[0]] : a.position);
-            const bPos = (Array.isArray(b.config.axis) ? b.position[b.config.axis[0]] : b.position);
+            const aPos = Array.isArray(a.config.axis) ? a.position[a.config.axis[0]] : a.position;
+            const bPos = Array.isArray(b.config.axis) ? b.position[b.config.axis[0]] : b.position;
 
-            if (direction === 'east') return bPos - aPos; // front is larger x
-            if (direction === 'west') return aPos - bPos; // west: front is smaller x
-            if (direction === 'north') return bPos - aPos; // front is larger y
-            if (direction === 'south') return aPos - bPos; // south: front is smaller y
+            if (direction === 'east') return bPos - aPos;
+            if (direction === 'west') return aPos - bPos;
+            if (direction === 'north') return bPos - aPos;
+            if (direction === 'south') return aPos - bPos;
             return 0;
         });
 
@@ -198,8 +184,7 @@ function moveCars() {
 
             car.targetSpeed = car.baseSpeed;
             
-            // only check spacing in the initial approach segment (before intersection)
-            // once cars pass the intersection, let them flow freely
+            // Spacing only matters before intersection; post-intersection cars exit freely
             if (frontCar && car.pathSegment === 0 && frontCar.pathSegment === 0) {
                 const axis = Array.isArray(car.config.axis) ? car.config.axis[0] : car.config.axis;
                 let distance;
@@ -210,7 +195,7 @@ function moveCars() {
                     distance = Math.abs(frontCar.position.y - car.position.y);
                 }
 
-                // only slow down if really close
+                // Gradual speed reduction prevents abrupt stops and adds realism
                 if (distance < car.desiredGap * 0.8) {
                     car.targetSpeed = 0;
                 } else if (distance < car.desiredGap * 1.2) {
@@ -235,13 +220,13 @@ function moveCars() {
             const speedThisFrame = car.currentSpeed;
 
             if (car.stopped) {
-                // a stopped car does not move.
+                
             } else {
                 let currentSegment = car.config.points[car.pathSegment];
                 let nextSegment = car.config.points[car.pathSegment + 1];
 
                 if (!nextSegment) {
-                    // End of path, continue moving straight to exit
+                    // Path complete, continue straight off-screen for natural exit
                     const lastAxis = Array.isArray(car.config.axis) ? car.config.axis[car.config.axis.length - 1] : car.config.axis;
                     const lastRotation = Array.isArray(car.config.rotation) ? car.config.rotation[car.config.rotation.length - 1] : car.config.rotation;
 
@@ -259,16 +244,12 @@ function moveCars() {
                         const direction = Math.sign(nextSegment.x - currentSegment.x);
                         car.position.x += direction * speedThisFrame;
                         if ((direction > 0 && car.position.x >= nextSegment.x) || (direction < 0 && car.position.x <= nextSegment.x)) {
-                            // Don't snap position - let it overshoot naturally
-                            // car.position.x = nextSegment.x;
                             moved = true;
                         }
-                    } else { // axis === 'y'
+                    } else {
                         const direction = Math.sign(nextSegment.y - currentSegment.y);
                         car.position.y += direction * speedThisFrame;
                         if ((direction > 0 && car.position.y >= nextSegment.y) || (direction < 0 && car.position.y <= nextSegment.y)) {
-                            // Don't snap position, ßßßßßßlet it overshoot naturally
-                            // car.position.y = nextSegment.y;
                             moved = true;
                         }
                     }
@@ -310,7 +291,7 @@ function moveCars() {
     });
 }
 
-// Update whether a lane is allowed to spawn based on count and hysteresis
+// Hysteresis prevents spawn flickering at threshold boundary
 function updateLaneSpawnFlag(direction) {
     const count = lanes[direction].length;
     if (count > 6) {
@@ -320,7 +301,7 @@ function updateLaneSpawnFlag(direction) {
     }
 }
 
-// Initialize traffic lights on page load
+// Syncs DOM state with data state on load
 function initializeTrafficLights() {
     for (const direction in trafficLights) {
         const lightElement = document.querySelector(`.traffic-light.${direction}`);
@@ -330,11 +311,9 @@ function initializeTrafficLights() {
     }
 }
 
-// Toggle traffic light when clicked
 function toggleLight(direction) {
     const lightElement = document.querySelector(`.traffic-light.${direction}`);
     
-    // Toggle between red and green
     if (trafficLights[direction] === 'red') {
         trafficLights[direction] = 'green';
         lightElement.classList.remove('red');
@@ -344,40 +323,31 @@ function toggleLight(direction) {
     }
 }
 
-// Game loop
 function gameLoop() {
     if (!isPaused) moveCars();
-    // always schedule next frame to keep responsiveness for resume
     requestAnimationFrame(gameLoop);
 }
 
-// Spawn cars at random intervals
+// Randomness and interval prevent uniform traffic patterns
 function startCarSpawning() {
-    // clear existing if called again
     if (spawnIntervalId) clearInterval(spawnIntervalId);
     spawnIntervalId = setInterval(() => {
         if (isPaused) return;
-        // Try spawn with 80% probability
         if (Math.random() < 0.8) {
-            // Get a random direction from all available paths
             spawnCar();
         }
     }, 2000);
 }
 
-// Start the game
 initializeTrafficLights();
 startCarSpawning();
 gameLoop();
 
-// Pause/resume button wiring
 const pauseBtn = document.getElementById('pauseBtn');
 if (pauseBtn) {
     pauseBtn.addEventListener('click', () => {
         isPaused = !isPaused;
         pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
         pauseBtn.setAttribute('aria-pressed', isPaused ? 'true' : 'false');
-        // spawning checks ispaused, so no extra handling needed for timers
     });
 }
-

@@ -35,10 +35,10 @@ p {
     margin: 0 auto;
     border-radius: 10px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    overflow: hidden; /* clip cars so they can't be seen outside the container */
+    overflow: hidden;
 }
 
-/* Pause button */
+/* Fixed position needed for overlay effect without disrupting document flow */
 #pauseBtn {
     position: fixed;
     top: 16px;
@@ -57,7 +57,6 @@ p {
     background: #ef4444;
 }
 
-/* Roads */
 .road {
     position: absolute;
     background: #555;
@@ -81,7 +80,6 @@ p {
     border-right: 3px dashed #f39c12;
 }
 
-/* Intersection */
 .intersection {
     position: absolute;
     width: 120px;
@@ -92,7 +90,6 @@ p {
     border: 3px solid #f39c12;
 }
 
-/* Traffic Lights */
 .traffic-light {
     position: absolute;
     width: 30px;
@@ -124,7 +121,7 @@ p {
     box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
 }
 
-/* Traffic light positions */
+/* Absolute positioning required to match intersection geometry */
 .traffic-light.north {
     top: 210px;
     left: 285px;
@@ -145,7 +142,6 @@ p {
     left: 200px;
 }
 
-/* Cars */
 .car {
     position: absolute;
     width: 40px;
@@ -153,7 +149,7 @@ p {
     border-radius: 5px;
     transition: opacity 0.6s linear, transform 0.25s linear;
     z-index: 5;
-    pointer-events: none; /* cars are visual only; avoid accidental interactions outside bounds */
+    pointer-events: none;
 }
 
 .car::before {
