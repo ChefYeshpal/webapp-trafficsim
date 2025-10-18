@@ -1,4 +1,4 @@
-// Initial state needs E/W flowing, N/S stopped to avoid immediate gridlock
+// Initial state
 const trafficLights = {
     north: 'red',
     south: 'red',
@@ -55,7 +55,7 @@ function getRandomDirection() {
 function spawnCar(direction = null) {
     const dir = direction || getRandomDirection();
 
-    // Prevents visual clutter?
+    // Prevents visual clutter
     const spawnLane = dir.split('-')[0];
     if (!laneAllowedToSpawn[spawnLane]) return null;
     if (lanes[spawnLane].length >= 6) {
