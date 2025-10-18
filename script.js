@@ -98,7 +98,7 @@ function spawnCar(direction = null) {
         targetSpeed: baseSpeed,
         accelFactor: 0.4, 
         stopped: false,
-        desiredGap: 70, 
+        desiredGap: 40,
         fadeState: {
             fadingIn: true,
             fadingOut: false,
