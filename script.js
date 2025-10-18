@@ -174,13 +174,33 @@ function moveCars() {
                 return b.pathSegment - a.pathSegment;
             }
             
-            // If on same segment, sort by position along current axis
+            // If on same segment, sort by position along current axis AND direction of travel
             const aAxis = Array.isArray(a.config.axis) ? a.config.axis[a.pathSegment] : a.config.axis;
             const bAxis = Array.isArray(b.config.axis) ? b.config.axis[b.pathSegment] : b.config.axis;
             
             const aPos = aAxis === 'x' ? a.position.x : a.position.y;
             const bPos = bAxis === 'x' ? b.position.x : b.position.y;
 
+            // Determine actual direction of movement based on path
+            const aNextPoint = a.config.points[a.pathSegment + 1];
+            const bNextPoint = b.config.points[b.pathSegment + 1];
+            
+            if (aNextPoint && bNextPoint && aAxis === bAxis) {
+                const aCurrentPoint = a.config.points[a.pathSegment];
+                const bCurrentPoint = b.config.points[b.pathSegment];
+                
+                if (aAxis === 'x') {
+                    // Moving on x-axis, check if going right (positive) or left (negative)
+                    const aMovingRight = aNextPoint.x > aCurrentPoint.x;
+                    return aMovingRight ? (bPos - aPos) : (aPos - bPos);
+                } else {
+                    // Moving on y-axis, check if going down (positive) or up (negative)
+                    const aMovingDown = aNextPoint.y > aCurrentPoint.y;
+                    return aMovingDown ? (bPos - aPos) : (aPos - bPos);
+                }
+            }
+
+            // Fallback
             if (direction === 'east') return bPos - aPos;
             if (direction === 'west') return aPos - bPos;
             if (direction === 'north') return bPos - aPos;
