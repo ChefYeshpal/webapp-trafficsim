@@ -124,3 +124,32 @@ const vehiclePaths = {
         blinker: { enabled: true, position: 'front', offsetY: -12 }
     }
 };
+
+
+
+/**
+ * Attaches a blinker to a car element based on the path configuration.
+ * @param {HTMLElement} carElement - The car DOM element to attach the blinker to.
+ * @param {Object} pathConfig - The configuration object for the car's path.
+ * @returns {HTMLElement|null} - The created blinker element, or null if no blinker is needed.
+ */
+function createBlinker(carElement, pathConfig) {
+    if (!pathConfig || !pathConfig.blinker || !pathConfig.blinker.enabled) {
+        return null;
+    }
+
+    // Create the blinker element (a tiny glowing div)
+    const blinker = document.createElement('div');
+    blinker.className = 'blinker front'; // CSS handles the blinking animation
+    
+    // Position the blinker vertically on the car
+    // offsetY determines how high/low it sits (negative = above car top)
+    if (typeof pathConfig.blinker.offsetY === 'number') {
+        blinker.style.top = `${pathConfig.blinker.offsetY}px`;
+    }
+    
+    // Attach it to the car (it'll move and rotate with the car)
+    carElement.appendChild(blinker);
+    
+    return blinker;
+}

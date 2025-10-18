@@ -81,16 +81,8 @@ function spawnCar(direction = null) {
     const rotation = Array.isArray(config.rotation) ? config.rotation[0] : config.rotation;
     carElement.style.transform = `rotate(${rotation}deg)`;
 
-    // Add blinker using path config (from path.js)
-    let blinker = null;
-    if (config && config.blinker && config.blinker.enabled) {
-        blinker = document.createElement('div');
-        blinker.className = 'blinker front';
-        if (typeof config.blinker.offsetY === 'number') {
-            blinker.style.top = `${config.blinker.offsetY}px`;
-        }
-        carElement.appendChild(blinker);
-    }
+    // Add blinker if this path requires one (handled by createBlinker in path.js)
+    const blinker = createBlinker(carElement, config);
 
     const container = document.querySelector('.intersection-container');
     if (!container) return null;
@@ -388,7 +380,7 @@ if (pauseBtn) {
         isPaused = !isPaused;
         pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
         pauseBtn.setAttribute('aria-pressed', isPaused ? 'true' : 'false');
-        // spawning checks isPaused, so no extra handling needed for timers
+        // spawning checks ispaused, so no extra handling needed for timers
     });
 }
 
