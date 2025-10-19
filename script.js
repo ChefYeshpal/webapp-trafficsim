@@ -188,12 +188,18 @@ function awardPoints() {
     if (bonusPoints > 0) {
         showBonusIndicator(bonusPoints);
     }
+    
+    // Update spawn rate when score changes
+    updateSpawnRate();
 }
 
 function deductPoints(amount) {
     pointsState.score -= amount;
     pointsState.streak = 0; // Reset streak on crash
     updateScoreDisplay();
+    
+    // Update spawn rate when score changes
+    updateSpawnRate();
     
     // Check for game over
     if (pointsState.score < 0 && !pointsState.isGameOver) {
@@ -734,15 +740,53 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
+// Dynamic spawn rate
+function calculateSpawnInterval() {
+    // min interval capped at 500ms to keep it playable
+    const baseInterval = 2000;
+    const minInterval = 500;
+    const scoreMultiplier = 20;
+    
+    const calculatedInterval = baseInterval - (pointsState.score * scoreMultiplier);
+    return Math.max(minInterval, calculatedInterval);
+}
+
+function calculateSpawnProbability() {
+    const baseProbability = 0.8;
+    const maxProbability = 0.95;
+    const scoreMultiplier = 0.002;
+    
+    const calculatedProbability = baseProbability + (pointsState.score * scoreMultiplier);
+    return Math.min(maxProbability, calculatedProbability);
+}
+
+function updateSpawnRate() {
+    if (spawnIntervalId) {
+        clearInterval(spawnIntervalId);
+        startCarSpawning();
+    }
+}
+
 // Randomness and interval prevent uniform traffic patterns
 function startCarSpawning() {
     if (spawnIntervalId) clearInterval(spawnIntervalId);
-    spawnIntervalId = setInterval(() => {
+    
+    function spawnWithDynamicRate() {
         if (isPaused) return;
-        if (Math.random() < 0.8) {
+        
+        const spawnProbability = calculateSpawnProbability();
+        if (Math.random() < spawnProbability) {
             spawnCar();
         }
-    }, 2000);
+        
+        // Restart interval with updated timing based on current score
+        if (spawnIntervalId) clearInterval(spawnIntervalId);
+        const newInterval = calculateSpawnInterval();
+        spawnIntervalId = setInterval(spawnWithDynamicRate, newInterval);
+    }
+    
+    const initialInterval = calculateSpawnInterval();
+    spawnIntervalId = setInterval(spawnWithDynamicRate, initialInterval);
 }
 
 initializeTrafficLights();
