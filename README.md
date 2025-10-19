@@ -4,20 +4,23 @@ A traffic light manager simulator
 This project is for week 6 of [siege](https://siege.hackclub.com), with the theme being "Signal". The initial idea is to make something akin to ["intersection controller"](https://play.google.com/store/apps/details?id=se.shadowtree.software.trafficbuilder&hl=en_GB&pli=1).
 Although, it will probably be much much simpler, with less logic involved as I currently dont have much knowledge in how to add driving logic to something that's on web. The reason why I prefer making things that can be displayed on web is, because it is much much simpler to test and deploy it in such a way that other's can test it as welll (looking at you stonemasons ;D)
 
+## Demo
+
+https://github.com/user-attachments/assets/demo.mp4
+
 ## Things to do
 
 - A traffic signal thing
-    - If the user makes a lane wait too long, then the drivers may crash into one another in an act of road rage
-    - Also, will need to add a system so that the crashed cars automatically get removed after some time (5secs)
+    - If the user makes a lane wait too long, then the drivers may crash into one another in an act of road rage (x)
 - Cars
     - They should get indicators
-        - a left arrow means they wanna go to left
-        - a right arrow means they wanna go to right
-        - no special thing means they wanna go straight
-    - Should become rash the longer they wait
+        - a left arrow means they wanna go to left (x)
+        - a right arrow means they wanna go to right (x) 
+        - no special thing means they wanna go straight (x)
+    - Should become rash the longer they wait (x)
 
 - Add more maps
-    - Maybe draw some? I dunno...
+    - Maybe draw some? I dunno... (x)
 
 
 ## Devlog
@@ -74,11 +77,14 @@ Although, it will probably be much much simpler, with less logic involved as I c
         - In case of crashes, you lose 5 points
     - Added game over system
     - Getting 69 points gives a noice dialogue box
+    - Added test functions to use in console to check if responses are properly shown
 
 ## Last thing's last...
 
 Okay, so I'm learning how to properly comment in my code, and I really wanna thank i-am-unknown-81514525 for telling me **how** to actually comment on code, previously I was going on the philosophy of "what this does", but from now on I will change it to the philosophy of "why I'm doing this". 
+
 I also want to address the fact that this is a super simple game for someone who did it in 10 hours, and I know, it is. Most of the time, I was actually held back due to logic issues (like turning and blinker) which I for the best of me couldn't understand how to code into this. Initially I had plannned for this to have more features but really by the end of it I kind of ran out of time, and couldn't really add them.
+
 Another thing to address was, when you check the commit history, you may see 2 names, "ChefYeshpal" and "valkarie", both are me, just on different workstations. I am currently trying to set up github cli on my linux (valkarie) workstation, however I request you to give a blind eye to it for this week as it's encountering some problems for some reason.
 
 ## Where was ai used?
