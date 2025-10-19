@@ -73,9 +73,16 @@ Although, it will probably be much much simpler, with less logic involved as I c
         - If many cars leave together at once, then you get nice multipliers
         - In case of crashes, you lose 5 points
     - Added game over system
+    - Getting 69 points gives a noice dialogue box
 
 ## Last thing's last...
 
 Okay, so I'm learning how to properly comment in my code, and I really wanna thank i-am-unknown-81514525 for telling me **how** to actually comment on code, previously I was going on the philosophy of "what this does", but from now on I will change it to the philosophy of "why I'm doing this". 
 I also want to address the fact that this is a super simple game for someone who did it in 10 hours, and I know, it is. Most of the time, I was actually held back due to logic issues (like turning and blinker) which I for the best of me couldn't understand how to code into this. Initially I had plannned for this to have more features but really by the end of it I kind of ran out of time, and couldn't really add them.
 Another thing to address was, when you check the commit history, you may see 2 names, "ChefYeshpal" and "valkarie", both are me, just on different workstations. I am currently trying to set up github cli on my linux (valkarie) workstation, however I request you to give a blind eye to it for this week as it's encountering some problems for some reason.
+
+## Where was ai used?
+
+- For the css in the point system, I just couldn't colour match things at the last moment...
+- For the end game screen css, same excuse
+- I think this constitutes for less than 30% of the overall code, considering how it's all just css
