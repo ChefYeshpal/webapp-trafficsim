@@ -9,6 +9,17 @@ const trafficLights = {
 let cars = [];
 let carIdCounter = 0;
 
+// Collision system state
+let crashState = {
+    active: false,
+    crashedCars: [],
+    crashTime: 0,
+    flickerStartTime: 0,
+    isFlickering: false,
+    recoveryMode: false,
+    recoveryStartTime: 0
+};
+
 // Lane tracking
 const lanes = {
     east: [],
@@ -62,8 +73,26 @@ function spawnCar(direction = null) {
         laneAllowedToSpawn[spawnLane] = false;
         return null;
     }
-
+    
+    // Check if spawn position would overlap with existing cars
     const config = vehiclePaths[dir];
+    const spawnX = config.points[0].x;
+    const spawnY = config.points[0].y;
+    const carWidth = 40;
+    const carHeight = 25;
+    const minSpawnDistance = 50; 
+    
+    for (const existingCar of lanes[spawnLane]) {
+        const dx = existingCar.position.x - spawnX;
+        const dy = existingCar.position.y - spawnY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < minSpawnDistance) {
+            return null;
+        }
+    }
+
+    // config already declared above, reuse it
     const color = getRandomColor();
     const id = `car-${carIdCounter++}`;
     
@@ -123,6 +152,176 @@ function removeCar(car) {
     updateLaneSpawnFlag(car.spawnLane);
 }
 
+// Collision detection
+function detectCollision(car1, car2) {
+    const carWidth = 40;
+    const carHeight = 25;
+    
+    // Get bounding boxes
+    const box1 = {
+        x: car1.position.x,
+        y: car1.position.y,
+        width: carWidth,
+        height: carHeight
+    };
+    
+    const box2 = {
+        x: car2.position.x,
+        y: car2.position.y,
+        width: carWidth,
+        height: carHeight
+    };
+    
+    const overlapX = Math.max(0, Math.min(box1.x + box1.width, box2.x + box2.width) - Math.max(box1.x, box2.x));
+    const overlapY = Math.max(0, Math.min(box1.y + box1.height, box2.y + box2.height) - Math.max(box1.y, box2.y));
+    
+    // Consider it a crash if overlap is more than 50% of car area
+    const overlapArea = overlapX * overlapY;
+    const carArea = carWidth * carHeight;
+    const overlapPercentage = overlapArea / carArea;
+    
+    if (overlapPercentage <= 0.5) return false;
+    
+    // ONLY consider it a valid crash if collision is in area
+    // Adding this cuz cars overlapping in spawn were acting up, gotta teach em a lesson
+    const intersectionBounds = {
+        left: 240,
+        right: 360,
+        top: 240,
+        bottom: 360
+    };
+    
+    // Check for car is at least partially in the intersection
+    const car1InIntersection = (
+        box1.x < intersectionBounds.right &&
+        box1.x + box1.width > intersectionBounds.left &&
+        box1.y < intersectionBounds.bottom &&
+        box1.y + box1.height > intersectionBounds.top
+    );
+    
+    const car2InIntersection = (
+        box2.x < intersectionBounds.right &&
+        box2.x + box2.width > intersectionBounds.left &&
+        box2.y < intersectionBounds.bottom &&
+        box2.y + box2.height > intersectionBounds.top
+    );
+    
+    return car1InIntersection && car2InIntersection;
+}
+
+// Check for collisions between all cars
+function checkForCollisions() {
+    if (crashState.active) return;
+    
+    for (let i = 0; i < cars.length; i++) {
+        for (let j = i + 1; j < cars.length; j++) {
+            if (detectCollision(cars[i], cars[j])) {
+                triggerCrash([cars[i], cars[j]]);
+                return;
+            }
+        }
+    }
+}
+
+// crash sequence
+function triggerCrash(crashedCars) {
+    crashState.active = true;
+    crashState.crashedCars = crashedCars;
+    crashState.crashTime = performance.now();
+    crashState.isFlickering = false;
+    
+    crashedCars.forEach(car => {
+        car.crashed = true;
+        car.element.style.border = '2px solid red';
+    });
+    
+    // Add red screen overlay with smooth fade-in
+    document.body.classList.add('crash-active');
+    
+    const crashAlert = document.getElementById('crashAlert');
+    if (crashAlert) {
+        crashAlert.style.display = 'block';
+        // Force reflow to enable CSS transition
+        crashAlert.offsetHeight;
+        crashAlert.style.opacity = '1';
+    }
+    
+    console.log('crash: Cars involved:', crashedCars.map(c => c.id));
+}
+
+
+function updateCrashState() {
+    if (!crashState.active) return;
+    
+    const currentTime = performance.now();
+    const timeSinceCrash = currentTime - crashState.crashTime;
+    
+    // 5 sec timer
+    if (timeSinceCrash < 5000) {
+        return;
+    }
+    
+    if (!crashState.isFlickering) {
+        crashState.isFlickering = true;
+        crashState.flickerStartTime = currentTime;
+    }
+    
+    const flickerDuration = 1500;
+    const timeSinceFlicker = currentTime - crashState.flickerStartTime;
+    
+    if (timeSinceFlicker < flickerDuration) {
+        const flickerInterval = 150;
+        const flickerCycle = Math.floor(timeSinceFlicker / flickerInterval);
+        const isVisible = flickerCycle % 2 === 0;
+        
+        crashState.crashedCars.forEach(car => {
+            if (car.element) {
+                car.element.style.opacity = isVisible ? '1' : '0.2';
+            }
+        });
+    } else {
+        // Remove crashed cars and immediately start fade-out
+        if (!crashState.recoveryMode) {
+            crashState.crashedCars.forEach(car => {
+                if (cars.includes(car)) {
+                    removeCar(car);
+                }
+            });
+            
+            const crashAlert = document.getElementById('crashAlert');
+            if (crashAlert) {
+                crashAlert.style.opacity = '0';
+                setTimeout(() => {
+                    crashAlert.style.display = 'none';
+                }, 50);
+            }
+            
+            // Red screen thingy
+            document.body.classList.remove('crash-active');
+            
+            crashState.recoveryMode = true;
+            crashState.recoveryStartTime = currentTime;
+            crashState.active = false;
+            crashState.crashedCars = [];
+            crashState.isFlickering = false;
+
+            console.log('crash: Cars removed, red screen fading out...');
+        }
+    }
+}
+
+function updateRecoveryState() {
+    if (!crashState.recoveryMode) return;
+    
+    const currentTime = performance.now();
+    const timeSinceRecovery = currentTime - crashState.recoveryStartTime;
+    
+    if (timeSinceRecovery >= 1500) {
+        crashState.recoveryMode = false;
+        console.log('crash: Recovery done, screen to normal');
+    }
+}
+
 function shouldStop(car, predictedSpeed = null) {
     // N/S cars observe far-side light to simulate real traffic signal placement
     const observedLightForDirection = (dir => {
@@ -163,6 +362,20 @@ function shouldStop(car, predictedSpeed = null) {
 }
 
 function moveCars() {
+    checkForCollisions();
+    
+    updateCrashState();
+    
+    updateRecoveryState();
+    
+    if (crashState.active) {
+        cars.forEach(car => {
+            car.targetSpeed = 0;
+            car.currentSpeed = 0;
+        });
+        return;
+    }
+    
     // ascending order for cars count
     Object.keys(lanes).forEach(direction => {
         const laneCars = lanes[direction];

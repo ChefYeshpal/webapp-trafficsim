@@ -12,9 +12,41 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    position: relative;
+    transition: background 0.3s ease;
+}
+
+/* Red screen overlay when crash occurs */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(220, 38, 38, 0);
+    z-index: 1;
+    pointer-events: none;
+    transition: background 1.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+body.crash-active::before {
+    background: rgba(220, 38, 38, 0.7);
+    animation: redPulse 1s ease-in-out infinite;
+}
+
+@keyframes redPulse {
+    0%, 100% {
+        background: rgba(220, 38, 38, 0.6);
+    }
+    50% {
+        background: rgba(220, 38, 38, 0.8);
+    }
 }
 
 .game-container {
+    position: relative;
+    z-index: 2;
     text-align: center;
 }
 
@@ -55,6 +87,33 @@ p {
 
 #pauseBtn[aria-pressed="true"] {
     background: #ef4444;
+}
+
+.crash-alert {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    padding: 15px 30px;
+    font-size: 20px;
+    font-weight: bold;
+    background: #ef4444;
+    color: #fff;
+    border: 3px solid #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    animation: pulse 0.5s infinite alternate;
+    transition: opacity 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+    from {
+        transform: translateX(-50%) scale(1);
+    }
+    to {
+        transform: translateX(-50%) scale(1.05);
+    }
 }
 
 .road {
