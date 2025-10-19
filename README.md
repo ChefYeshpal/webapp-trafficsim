@@ -68,6 +68,11 @@ Although, it will probably be much much simpler, with less logic involved as I c
         - Added console logs for crashes, could help in debugging later on ig
         - Added red screen for notifying crash
         - Cars also shouldn't spawn upon one another (at least in my testing)
+    - Added point system
+        - The cars that leave the game container constitute one point
+        - If many cars leave together at once, then you get nice multipliers
+        - In case of crashes, you lose 5 points
+    - Added game over system
 
 ## Last thing's last...
 
