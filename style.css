@@ -233,7 +233,19 @@ p {
 .game-over-message {
     font-size: 18px;
     color: #d1d5db;
-    margin-bottom: 30px;
+    margin-bottom: 15px;
+}
+
+.game-over-response {
+    font-size: 20px;
+    color: #fbbf24;
+    font-style: italic;
+    margin: 15px 0 25px 0;
+    padding: 15px;
+    background: rgba(251, 191, 36, 0.1);
+    border-left: 4px solid #fbbf24;
+    border-radius: 5px;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
 }
 
 .final-score-container {

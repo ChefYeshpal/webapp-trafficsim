@@ -271,6 +271,13 @@ function triggerGameOver() {
         if (finalScoreElement) {
             finalScoreElement.textContent = pointsState.score;
         }
+        
+        // Display random crash response
+        const responseElement = document.getElementById('gameOverResponse');
+        if (responseElement && typeof getRandomGameOverResponse === 'function') {
+            const randomResponse = getRandomGameOverResponse();
+            responseElement.textContent = `"${randomResponse}"`;
+        }
     }
     
     console.log('GAME OVER! Final score:', pointsState.score);
