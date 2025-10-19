@@ -77,4 +77,4 @@ window.testGameOver = function(responseIndex) {
 console.log('gameover: Test Functions Available:');
 console.log('  - testGameOver()           : Trigger game over with random response');
 console.log('  - testGameOver(5)          : Trigger game over with response #5');
-console.log('  - showResponseCount()      : Show total number of responses');
+console.log('  - showGameOverResponses()      : Show total number of responses');
