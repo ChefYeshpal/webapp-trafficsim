@@ -62,7 +62,12 @@ Although, it will probably be much much simpler, with less logic involved as I c
         - Cars kept overlapping after taking turn for somereason, apparently I gotta make sure it ALWAYS reads the distance from the cars...
     - Blinker system doeBsn't really work for some reason...
 - 19 Oct 2025
-    - 
+    - Added collision checking system
+        - Crash is only registered if cars overlap a certain bit
+        - It is also only registered in the area of intersection between the two roads, otherwise one can get a game over cause of some weird bugs I probably didn't find
+        - Added console logs for crashes, could help in debugging later on ig
+        - Added red screen for notifying crash
+        - Cars also shouldn't spawn upon one another (at least in my testing)
 
 ## Last thing's last...
 
