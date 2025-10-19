@@ -12,8 +12,31 @@
         
         <button id="pauseBtn" aria-pressed="false">Pause</button>
         
+        <!-- Score Display -->
+        <div class="score-container">
+            <div class="score-label">Score</div>
+            <div id="scoreDisplay" class="score-value">0</div>
+            <div id="streakDisplay" class="streak-indicator" style="display: none;">x1 streak!</div>
+        </div>
+        
+        <!-- Bonus Indicator -->
+        <div id="bonusIndicator" class="bonus-indicator" style="display: none;">+1 BONUS!</div>
+        
         <div id="crashAlert" class="crash-alert" style="display: none; opacity: 0;">
             OH NO! THE CAR IS STUKKIE WUKKIE!!!
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen" class="game-over-screen" style="display: none;">
+            <div class="game-over-content">
+                <h2>GAME OVER!</h2>
+                <p class="game-over-message">You went into negative points!</p>
+                <div class="final-score-container">
+                    <span class="final-score-label">Final Score:</span>
+                    <span id="finalScore" class="final-score-value">0</span>
+                </div>
+                <button id="restartBtn" class="restart-btn" onclick="restartGame()">Restart Game</button>
+            </div>
         </div>
         
         <div class="intersection-container">

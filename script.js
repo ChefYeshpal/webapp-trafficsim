@@ -20,6 +20,15 @@ let crashState = {
     recoveryStartTime: 0
 };
 
+// Point system state
+let pointsState = {
+    score: 0,
+    streak: 0,
+    lastCarExitTime: 0,
+    streakTimeout: 2000,
+    isGameOver: false
+};
+
 // Lane tracking
 const lanes = {
     east: [],
@@ -28,7 +37,7 @@ const lanes = {
     south: []
 };
 
-// prevent lane overcrowding by pausing spawns above threshold, resuming below lower threshold
+// prevent lane overcrowding by pausing spawns above threshold
 const laneAllowedToSpawn = {
     east: true,
     west: true,
@@ -152,6 +161,137 @@ function removeCar(car) {
     updateLaneSpawnFlag(car.spawnLane);
 }
 
+// Point system functions
+function awardPoints() {
+    if (pointsState.isGameOver) return;
+    
+    const currentTime = performance.now();
+    const timeSinceLastExit = currentTime - pointsState.lastCarExitTime;
+    
+    // Check for streak continuation
+    if (timeSinceLastExit < pointsState.streakTimeout && pointsState.lastCarExitTime > 0) {
+        pointsState.streak++;
+    } else {
+        pointsState.streak = 1;
+    }
+    
+    const basePoints = 1;
+    const bonusPoints = Math.floor(pointsState.streak / 4); // Bonus and shit
+    const totalPoints = basePoints + bonusPoints;
+    
+    pointsState.score += totalPoints;
+    pointsState.lastCarExitTime = currentTime;
+    
+    updateScoreDisplay();
+    
+    if (bonusPoints > 0) {
+        showBonusIndicator(bonusPoints);
+    }
+}
+
+function deductPoints(amount) {
+    pointsState.score -= amount;
+    pointsState.streak = 0; // Reset streak on crash
+    updateScoreDisplay();
+    
+    // Check for game over
+    if (pointsState.score < 0 && !pointsState.isGameOver) {
+        triggerGameOver();
+    }
+}
+
+function updateScoreDisplay() {
+    const scoreElement = document.getElementById('scoreDisplay');
+    if (scoreElement) {
+        scoreElement.textContent = pointsState.score;
+        
+        scoreElement.classList.remove('score-change');
+        void scoreElement.offsetWidth; // Force reflow
+        scoreElement.classList.add('score-change');
+    }
+    
+    const streakElement = document.getElementById('streakDisplay');
+    if (streakElement && pointsState.streak > 1) {
+        streakElement.textContent = `x${pointsState.streak} streak!`;
+        streakElement.style.display = 'block';
+    } else if (streakElement) {
+        streakElement.style.display = 'none';
+    }
+}
+
+function showBonusIndicator(bonus) {
+    const bonusElement = document.getElementById('bonusIndicator');
+    if (bonusElement) {
+        bonusElement.textContent = `+${bonus} BONUS!`;
+        bonusElement.style.display = 'block';
+        bonusElement.classList.remove('bonus-appear');
+        void bonusElement.offsetWidth; // Force reflow
+        bonusElement.classList.add('bonus-appear');
+        
+        setTimeout(() => {
+            bonusElement.style.display = 'none';
+        }, 1500);
+    }
+}
+
+function triggerGameOver() {
+    pointsState.isGameOver = true;
+    isPaused = true;
+    
+    if (spawnIntervalId) {
+        clearInterval(spawnIntervalId);
+    }
+    
+    // Show game over screen
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    if (gameOverScreen) {
+        gameOverScreen.style.display = 'flex';
+        const finalScoreElement = document.getElementById('finalScore');
+        if (finalScoreElement) {
+            finalScoreElement.textContent = pointsState.score;
+        }
+    }
+    
+    console.log('GAME OVER! Final score:', pointsState.score);
+}
+
+function restartGame() {
+    // Reset game state
+    pointsState.score = 0;
+    pointsState.streak = 0;
+    pointsState.lastCarExitTime = 0;
+    pointsState.isGameOver = false;
+    isPaused = false;
+    
+    // Clear all cars
+    cars.forEach(car => car.element.remove());
+    cars = [];
+    Object.keys(lanes).forEach(direction => {
+        lanes[direction] = [];
+    });
+    
+    // Reset crash state
+    crashState.active = false;
+    crashState.crashedCars = [];
+    crashState.isFlickering = false;
+    crashState.recoveryMode = false;
+    document.body.classList.remove('crash-active');
+    
+    // Hide game over screen
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    if (gameOverScreen) {
+        gameOverScreen.style.display = 'none';
+    }
+    
+    // Update displays
+    updateScoreDisplay();
+    
+    // Restart spawning
+    startCarSpawning();
+    
+    console.log('Game restarted!');
+}
+
 // Collision detection
 function detectCollision(car1, car2) {
     const carWidth = 40;
@@ -235,13 +375,13 @@ function triggerCrash(crashedCars) {
         car.element.style.border = '2px solid red';
     });
     
-    // Add red screen overlay with smooth fade-in
+    deductPoints(5);
+    
     document.body.classList.add('crash-active');
     
     const crashAlert = document.getElementById('crashAlert');
     if (crashAlert) {
         crashAlert.style.display = 'block';
-        // Force reflow to enable CSS transition
         crashAlert.offsetHeight;
         crashAlert.style.opacity = '1';
     }
@@ -520,6 +660,9 @@ function moveCars() {
             delete car.fadeState; 
 
             if (car.position.x > 650 || car.position.x < -50 || car.position.y > 650 || car.position.y < -50) {
+                if (!car.crashed) {
+                    awardPoints();
+                }
                 removeCar(car);
             }
         }
@@ -575,6 +718,7 @@ function startCarSpawning() {
 }
 
 initializeTrafficLights();
+updateScoreDisplay();
 startCarSpawning();
 gameLoop();
 
