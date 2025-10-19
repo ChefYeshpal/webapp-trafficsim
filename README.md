@@ -6,9 +6,7 @@ Although, it will probably be much much simpler, with less logic involved as I c
 
 ## Things to do
 
-- Add roads
 - A traffic signal thing
-    - Red and green will be there, the user will control the red and green lights
     - If the user makes a lane wait too long, then the drivers may crash into one another in an act of road rage
     - Also, will need to add a system so that the crashed cars automatically get removed after some time (5secs)
 - Cars
@@ -17,6 +15,10 @@ Although, it will probably be much much simpler, with less logic involved as I c
         - a right arrow means they wanna go to right
         - no special thing means they wanna go straight
     - Should become rash the longer they wait
+
+- Add more maps
+    - Maybe draw some? I dunno...
+
 
 ## Devlog
 
@@ -58,4 +60,10 @@ Although, it will probably be much much simpler, with less logic involved as I c
         - It was [0 -90] before, so the problem was probably that it spun to 90 deg first then kept going until it aligned and could go forwards
     - Fixed overlapping of cars
         - Cars kept overlapping after taking turn for somereason, apparently I gotta make sure it ALWAYS reads the distance from the cars...
+    - Blinker system doeBsn't really work for some reason...
+- 19 Oct 2025
     - 
+
+## Last thing's last...
+
+Okay, so I'm learning how to properly comment in my code, and I really wanna thank 
