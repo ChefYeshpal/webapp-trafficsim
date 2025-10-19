@@ -427,3 +427,77 @@ p {
     top: 5px;
     left: 12px;
 }
+
+/* Dialogue Box Styles */
+.dialogue-box {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 300;
+}
+
+.dialogue-content {
+    background: #1f2937;
+    color: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    max-width: 500px;
+}
+
+.dialogue-content h2 {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: #fbbf24;
+}
+
+.dialogue-content p {
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.dialogue-content ol {
+    text-align: left;
+    margin-bottom: 20px;
+    padding-left: 20px;
+}
+
+.dialogue-content li {
+    margin-bottom: 10px;
+}
+
+.start-game-btn {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.start-game-btn:hover {
+    background: #059669;
+}
+
+/* Fade-out animation for dialogue box */
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.dialogue-box.fade-out {
+    animation: fadeOut 0.5s ease forwards;
+}

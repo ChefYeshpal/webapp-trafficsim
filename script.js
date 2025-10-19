@@ -750,6 +750,25 @@ updateScoreDisplay();
 startCarSpawning();
 gameLoop();
 
+// Show dialogue box on game load
+window.addEventListener('load', () => {
+    const dialogueBox = document.getElementById('dialogueBox');
+    const startGameBtn = document.getElementById('startGameBtn');
+
+    if (dialogueBox && startGameBtn) {
+        dialogueBox.style.display = 'flex';
+        isPaused = true; // Pause the game until the user starts
+
+        startGameBtn.addEventListener('click', () => {
+            dialogueBox.classList.add('fade-out');
+            setTimeout(() => {
+                dialogueBox.style.display = 'none';
+                isPaused = false; // Resume the game
+            }, 500); // Match the duration of the fade-out animation
+        });
+    }
+});
+
 const pauseBtn = document.getElementById('pauseBtn');
 if (pauseBtn) {
     pauseBtn.addEventListener('click', () => {
