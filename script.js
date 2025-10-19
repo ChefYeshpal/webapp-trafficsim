@@ -9,7 +9,7 @@ const trafficLights = {
 let cars = [];
 let carIdCounter = 0;
 
-// Separate lane tracking needed for independent spawn control and spacing logic per direction
+// Lane tracking
 const lanes = {
     east: [],
     west: [],
@@ -28,7 +28,7 @@ const laneAllowedToSpawn = {
 let isPaused = false;
 let spawnIntervalId = null;
 
-// gradients to make individual cars distinguishable
+// color gradients
 const carColors = [
     'linear-gradient(135deg, #e74c3c, #c0392b)', 
     'linear-gradient(135deg, #3498db, #2980b9)', 
@@ -190,11 +190,9 @@ function moveCars() {
                 const bCurrentPoint = b.config.points[b.pathSegment];
                 
                 if (aAxis === 'x') {
-                    // Moving on x-axis, check if going right (positive) or left (negative)
                     const aMovingRight = aNextPoint.x > aCurrentPoint.x;
                     return aMovingRight ? (bPos - aPos) : (aPos - bPos);
                 } else {
-                    // Moving on y-axis, check if going down (positive) or up (negative)
                     const aMovingDown = aNextPoint.y > aCurrentPoint.y;
                     return aMovingDown ? (bPos - aPos) : (aPos - bPos);
                 }
@@ -217,7 +215,7 @@ function moveCars() {
             
             // spacing and stuff b/w cars
             if (frontCar) {
-                // calc actual distance between cars using Euclidean distance
+                // calc actual distance between cars using euclidean distance
                 const dx = frontCar.position.x - car.position.x;
                 const dy = frontCar.position.y - car.position.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
