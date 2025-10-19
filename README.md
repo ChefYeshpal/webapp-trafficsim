@@ -79,6 +79,8 @@ Although, it will probably be much much simpler, with less logic involved as I c
     - Added game over system
     - Getting 69 points gives a noice dialogue box
     - Added test functions to use in console to check if responses are properly shown
+    - Added a initial dialogue box to explain how the game works
+    - Added dynamic spawn rates, depend on your score really
 
 ## Last thing's last...
 
