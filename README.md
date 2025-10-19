@@ -6,7 +6,8 @@ Although, it will probably be much much simpler, with less logic involved as I c
 
 ## Demo
 
-https://github.com/user-attachments/assets/demo.mp4
+**[Watch Demo Video](./assets/demo.mp4)** (gotta download it, gh doesn't support vid embeds!?!??!??!)
+
 
 ## Things to do
 
@@ -83,7 +84,9 @@ https://github.com/user-attachments/assets/demo.mp4
 
 Okay, so I'm learning how to properly comment in my code, and I really wanna thank i-am-unknown-81514525 for telling me **how** to actually comment on code, previously I was going on the philosophy of "what this does", but from now on I will change it to the philosophy of "why I'm doing this". 
 
+
 I also want to address the fact that this is a super simple game for someone who did it in 10 hours, and I know, it is. Most of the time, I was actually held back due to logic issues (like turning and blinker) which I for the best of me couldn't understand how to code into this. Initially I had plannned for this to have more features but really by the end of it I kind of ran out of time, and couldn't really add them.
+
 
 Another thing to address was, when you check the commit history, you may see 2 names, "ChefYeshpal" and "valkarie", both are me, just on different workstations. I am currently trying to set up github cli on my linux (valkarie) workstation, however I request you to give a blind eye to it for this week as it's encountering some problems for some reason.
 
