@@ -26,7 +26,8 @@ let pointsState = {
     streak: 0,
     lastCarExitTime: 0,
     streakTimeout: 2000,
-    isGameOver: false
+    isGameOver: false,
+    achieved69: false
 };
 
 // Lane tracking
@@ -217,6 +218,12 @@ function updateScoreDisplay() {
     } else if (streakElement) {
         streakElement.style.display = 'none';
     }
+    
+    // 69 achievement, you're a noice person if you're reading this ;)
+    if (pointsState.score === 69 && !pointsState.achieved69) {
+        pointsState.achieved69 = true;
+        trigger69Achievement();
+    }
 }
 
 function showBonusIndicator(bonus) {
@@ -232,6 +239,20 @@ function showBonusIndicator(bonus) {
             bonusElement.style.display = 'none';
         }, 1500);
     }
+}
+
+// Just for console
+function trigger69Achievement() {
+    
+    isPaused = true;
+    
+    setTimeout(() => {
+        alert('noice');
+        
+        isPaused = false;
+    }, 100);
+
+    console.log('Nice! You reached 69 points ;)');
 }
 
 function triggerGameOver() {
