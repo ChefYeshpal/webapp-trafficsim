@@ -6,7 +6,7 @@ Although, it will probably be much much simpler, with less logic involved as I c
 
 ## Demo
 
-https://github.com/user-attachments/assets/demo.mp4
+![Demo Video](assets/demo.mp4)
 
 ## Things to do
 
