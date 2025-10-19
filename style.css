@@ -16,7 +16,7 @@ body {
     transition: background 0.3s ease;
 }
 
-/* Red screen overlay when crash occurs */
+/* crashy crashy trashy trashy~ */
 body::before {
     content: '';
     position: fixed;
@@ -70,7 +70,7 @@ p {
     overflow: hidden;
 }
 
-/* Fixed position needed for overlay effect without disrupting document flow */
+
 #pauseBtn {
     position: fixed;
     top: 16px;
@@ -137,7 +137,6 @@ p {
     text-shadow: 0 0 5px rgba(251, 191, 36, 0.5);
 }
 
-/* Bonus Indicator */
 .bonus-indicator {
     position: fixed;
     top: 100px;
@@ -176,7 +175,6 @@ p {
     }
 }
 
-/* Game Over Screen */
 .game-over-screen {
     position: fixed;
     top: 0;
@@ -386,7 +384,6 @@ p {
     box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
 }
 
-/* Absolute positioning required to match intersection geometry */
 .traffic-light.north {
     top: 210px;
     left: 285px;
@@ -428,7 +425,6 @@ p {
     left: 12px;
 }
 
-/* Dialogue Box Styles */
 .dialogue-box {
     position: fixed;
     top: 0;
@@ -488,7 +484,6 @@ p {
     background: #059669;
 }
 
-/* Fade-out animation for dialogue box */
 @keyframes fadeOut {
     from {
         opacity: 1;

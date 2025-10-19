@@ -195,13 +195,11 @@ function awardPoints() {
 
 function deductPoints(amount) {
     pointsState.score -= amount;
-    pointsState.streak = 0; // Reset streak on crash
+    pointsState.streak = 0;
     updateScoreDisplay();
     
-    // Update spawn rate when score changes
     updateSpawnRate();
     
-    // Check for game over
     if (pointsState.score < 0 && !pointsState.isGameOver) {
         triggerGameOver();
     }
@@ -269,7 +267,6 @@ function triggerGameOver() {
         clearInterval(spawnIntervalId);
     }
     
-    // Show game over screen
     const gameOverScreen = document.getElementById('gameOverScreen');
     if (gameOverScreen) {
         gameOverScreen.style.display = 'flex';
@@ -278,7 +275,6 @@ function triggerGameOver() {
             finalScoreElement.textContent = pointsState.score;
         }
         
-        // Display random crash response
         const responseElement = document.getElementById('gameOverResponse');
         if (responseElement && typeof getRandomGameOverResponse === 'function') {
             const randomResponse = getRandomGameOverResponse();
@@ -290,37 +286,31 @@ function triggerGameOver() {
 }
 
 function restartGame() {
-    // Reset game state
     pointsState.score = 0;
     pointsState.streak = 0;
     pointsState.lastCarExitTime = 0;
     pointsState.isGameOver = false;
     isPaused = false;
     
-    // Clear all cars
     cars.forEach(car => car.element.remove());
     cars = [];
     Object.keys(lanes).forEach(direction => {
         lanes[direction] = [];
     });
     
-    // Reset crash state
     crashState.active = false;
     crashState.crashedCars = [];
     crashState.isFlickering = false;
     crashState.recoveryMode = false;
     document.body.classList.remove('crash-active');
     
-    // Hide game over screen
     const gameOverScreen = document.getElementById('gameOverScreen');
     if (gameOverScreen) {
         gameOverScreen.style.display = 'none';
     }
     
-    // Update displays
     updateScoreDisplay();
     
-    // Restart spawning
     startCarSpawning();
     
     console.log('Game restarted!');
@@ -349,7 +339,6 @@ function detectCollision(car1, car2) {
     const overlapX = Math.max(0, Math.min(box1.x + box1.width, box2.x + box2.width) - Math.max(box1.x, box2.x));
     const overlapY = Math.max(0, Math.min(box1.y + box1.height, box2.y + box2.height) - Math.max(box1.y, box2.y));
     
-    // Consider it a crash if overlap is more than 50% of car area
     const overlapArea = overlapX * overlapY;
     const carArea = carWidth * carHeight;
     const overlapPercentage = overlapArea / carArea;
@@ -365,7 +354,7 @@ function detectCollision(car1, car2) {
         bottom: 360
     };
     
-    // Check for car is at least partially in the intersection
+    // Check for car is at least partially in the intersection, just for countermeasure
     const car1InIntersection = (
         box1.x < intersectionBounds.right &&
         box1.x + box1.width > intersectionBounds.left &&
@@ -383,7 +372,6 @@ function detectCollision(car1, car2) {
     return car1InIntersection && car2InIntersection;
 }
 
-// Check for collisions between all cars
 function checkForCollisions() {
     if (crashState.active) return;
     
@@ -430,7 +418,6 @@ function updateCrashState() {
     const currentTime = performance.now();
     const timeSinceCrash = currentTime - crashState.crashTime;
     
-    // 5 sec timer
     if (timeSinceCrash < 5000) {
         return;
     }
@@ -556,7 +543,6 @@ function moveCars() {
         
         // Sort by path progress: higher pathSegment = further ahead, then by position within segment
         laneCars.sort((a, b) => {
-            // compare by path segment (further along the path = in front)
             if (a.pathSegment !== b.pathSegment) {
                 return b.pathSegment - a.pathSegment;
             }
@@ -607,7 +593,7 @@ function moveCars() {
                 const dy = frontCar.position.y - car.position.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                // prevent clipping
+                // sometimes I overcomment stuff, then review the comments to make sure that 'is it really needed?'
                 const effectiveGap = (frontCar.pathSegment > 0 || car.pathSegment > 0) 
                     ? car.desiredGap * 1.3 
                     : car.desiredGap;
@@ -801,14 +787,14 @@ window.addEventListener('load', () => {
 
     if (dialogueBox && startGameBtn) {
         dialogueBox.style.display = 'flex';
-        isPaused = true; // Pause the game until the user starts
+        isPaused = true; 
 
         startGameBtn.addEventListener('click', () => {
             dialogueBox.classList.add('fade-out');
             setTimeout(() => {
                 dialogueBox.style.display = 'none';
-                isPaused = false; // Resume the game
-            }, 500); // Match the duration of the fade-out animation
+                isPaused = false;
+            }, 500);
         });
     }
 });
@@ -821,3 +807,5 @@ if (pauseBtn) {
         pauseBtn.setAttribute('aria-pressed', isPaused ? 'true' : 'false');
     });
 }
+
+// Hi :)
