@@ -49,19 +49,17 @@ const laneAllowedToSpawn = {
 let isPaused = false;
 let spawnIntervalId = null;
 
-// color gradients
 const carColors = [
-    'linear-gradient(135deg, #e74c3c, #c0392b)', 
-    'linear-gradient(135deg, #3498db, #2980b9)', 
-    'linear-gradient(135deg, #2ecc71, #27ae60)', 
-    'linear-gradient(135deg, #f39c12, #d68910)', 
-    'linear-gradient(135deg, #9b59b6, #8e44ad)', 
-    'linear-gradient(135deg, #1abc9c, #16a085)', 
-    'linear-gradient(135deg, #e67e22, #d35400)', 
-    'linear-gradient(135deg, #34495e, #2c3e50)', 
+    '#b91c1c', 
+    '#1d4ed8', 
+    '#047857', 
+    '#b45309', 
+    '#6d28d9', 
+    '#0e7490', 
+    '#374151', 
+    '#111827'  
 ];
 
-// Paths separated into dedicated module 
 const directionConfigs = vehiclePaths;
 
 function getRandomColor() {
@@ -102,7 +100,6 @@ function spawnCar(direction = null) {
         }
     }
 
-    // config already declared above, reuse it
     const color = getRandomColor();
     const id = `car-${carIdCounter++}`;
     
@@ -119,7 +116,6 @@ function spawnCar(direction = null) {
     if (!container) return null;
     container.appendChild(carElement);
     
-    // variable speed
     const baseSpeed = 1 + Math.random() * 1;
     carElement.style.opacity = '0';
 
@@ -169,7 +165,6 @@ function awardPoints() {
     const currentTime = performance.now();
     const timeSinceLastExit = currentTime - pointsState.lastCarExitTime;
     
-    // Check for streak continuation
     if (timeSinceLastExit < pointsState.streakTimeout && pointsState.lastCarExitTime > 0) {
         pointsState.streak++;
     } else {
@@ -189,7 +184,6 @@ function awardPoints() {
         showBonusIndicator(bonusPoints);
     }
     
-    // Update spawn rate when score changes
     updateSpawnRate();
 }
 
@@ -399,7 +393,6 @@ function triggerCrash(crashedCars) {
     
     deductPoints(5);
     
-    document.body.classList.add('crash-active');
     
     const crashAlert = document.getElementById('crashAlert');
     if (crashAlert) {
@@ -441,7 +434,6 @@ function updateCrashState() {
             }
         });
     } else {
-        // Remove crashed cars and immediately start fade-out
         if (!crashState.recoveryMode) {
             crashState.crashedCars.forEach(car => {
                 if (cars.includes(car)) {
@@ -457,8 +449,6 @@ function updateCrashState() {
                 }, 50);
             }
             
-            // Red screen thingy
-            document.body.classList.remove('crash-active');
             
             crashState.recoveryMode = true;
             crashState.recoveryStartTime = currentTime;
@@ -499,7 +489,6 @@ function shouldStop(car, predictedSpeed = null) {
         const currentPos = axis === 'x' ? car.position.x : car.position.y;
         const speedToUse = predictedSpeed !== null ? predictedSpeed : (car.currentSpeed || car.speed || 0);
         
-        // Prediction prevents overshooting the stop line
         if (axis === 'x') {
             if (car.spawnLane === 'east' && currentPos < stopPosition && currentPos + speedToUse >= stopPosition) {
                 return true;
@@ -598,7 +587,6 @@ function moveCars() {
                     ? car.desiredGap * 1.3 
                     : car.desiredGap;
 
-                // speed control to prevent overlaps
                 if (distance < effectiveGap * 0.9) {
                     car.targetSpeed = 0; 
                 } else if (distance < effectiveGap * 1.1) {
@@ -728,7 +716,6 @@ function gameLoop() {
 
 // Dynamic spawn rate
 function calculateSpawnInterval() {
-    // min interval capped at 500ms to keep it playable
     const baseInterval = 2000;
     const minInterval = 500;
     const scoreMultiplier = 20;
@@ -765,7 +752,6 @@ function startCarSpawning() {
             spawnCar();
         }
         
-        // Restart interval with updated timing based on current score
         if (spawnIntervalId) clearInterval(spawnIntervalId);
         const newInterval = calculateSpawnInterval();
         spawnIntervalId = setInterval(spawnWithDynamicRate, newInterval);
@@ -780,7 +766,6 @@ updateScoreDisplay();
 startCarSpawning();
 gameLoop();
 
-// Show dialogue box on game load
 window.addEventListener('load', () => {
     const dialogueBox = document.getElementById('dialogueBox');
     const startGameBtn = document.getElementById('startGameBtn');

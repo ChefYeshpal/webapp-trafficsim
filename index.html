@@ -9,8 +9,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Traffic Signal Shabing</h1>
-        
+
         <button id="pauseBtn" aria-pressed="false">Pause</button>
         
         <div class="score-container">
@@ -39,7 +38,8 @@
             </div>
         </div>
         
-        <div class="intersection-container">
+        <div class="game-layout">
+            <div class="intersection-container">
             <div class="road horizontal"></div>
             
             <div class="road vertical"></div>
@@ -58,19 +58,20 @@
             <div class="traffic-light west" data-direction="west" onclick="toggleLight('west')">
                 <div class="light"></div>
             </div>
+            </div>
         </div>
         
         <div id="dialogueBox" class="dialogue-box" style="display: flex;">
             <div class="dialogue-content">
-                <h2>WAIT A MOMENT!!!</h2>
-                <p>You should probably know how to play this...</p>
+                <h2>Before you begin</h2>
+                <p>Operate the intersection safely and efficiently:</p>
                 <ol>
-                    <li>You control the traffic signals, click them to toggle</li>
-                    <li>Make sure the cars don’t crash, each time that happens you get a -5 penalty</li>
-                    <li>The more cars you send the more points you get</li>
-                    <li>Don’t make the cars wait long</li>
+                    <li>Click the signal housings to toggle red/green for each approach.</li>
+                    <li>Prevent collisions. Each crash applies a -5 penalty.</li>
+                    <li>Keep vehicles moving to increase your score.</li>
+                    <li>Minimize wait times, avoid long queues.</li>
                 </ol>
-                <button id="startGameBtn" class="start-game-btn">okay, plj lemme playyy</button>
+                <button id="startGameBtn" class="start-game-btn">Start</button>
             </div>
         </div>
     </div>
