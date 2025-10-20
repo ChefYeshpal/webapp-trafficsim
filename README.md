@@ -96,3 +96,7 @@ Another thing to address was, when you check the commit history, you may see 2 n
 
 - Originally I used AI in the css part, but after getting a warning from stonemasons I've re-written most of the css myself again
 - I think this constitutes for less than 30% of the overall code, considering how it's all just css
+
+## Update: Regarding the AI issue
+
+I was told that the css looked very much "AI like" and there was some code in the JS which they think was AI generated, because of that I have changed the css, and also removed some of the js logic (not a lot though). I hope this is enough for the reviewers to consider this project to be less than 30% AI, even though I haven't used it as much.
