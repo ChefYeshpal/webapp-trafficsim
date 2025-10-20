@@ -1,4 +1,3 @@
-// Initial state
 const trafficLights = {
     north: 'red',
     south: 'red',
@@ -9,7 +8,6 @@ const trafficLights = {
 let cars = [];
 let carIdCounter = 0;
 
-// Collision system state
 let crashState = {
     active: false,
     crashedCars: [],
@@ -20,7 +18,6 @@ let crashState = {
     recoveryStartTime: 0
 };
 
-// Point system state
 let pointsState = {
     score: 0,
     streak: 0,
@@ -30,7 +27,6 @@ let pointsState = {
     achieved69: false
 };
 
-// Lane tracking
 const lanes = {
     east: [],
     west: [],
@@ -38,7 +34,6 @@ const lanes = {
     south: []
 };
 
-// prevent lane overcrowding by pausing spawns above threshold
 const laneAllowedToSpawn = {
     east: true,
     west: true,
@@ -74,7 +69,6 @@ function getRandomDirection() {
 function spawnCar(direction = null) {
     const dir = direction || getRandomDirection();
 
-    // Prevents visual clutter
     const spawnLane = dir.split('-')[0];
     if (!laneAllowedToSpawn[spawnLane]) return null;
     if (lanes[spawnLane].length >= 6) {
@@ -82,7 +76,6 @@ function spawnCar(direction = null) {
         return null;
     }
     
-    // Check if spawn position would overlap with existing cars
     const config = vehiclePaths[dir];
     const spawnX = config.points[0].x;
     const spawnY = config.points[0].y;
@@ -158,7 +151,6 @@ function removeCar(car) {
     updateLaneSpawnFlag(car.spawnLane);
 }
 
-// Point system functions
 function awardPoints() {
     if (pointsState.isGameOver) return;
     
@@ -172,7 +164,7 @@ function awardPoints() {
     }
     
     const basePoints = 1;
-    const bonusPoints = Math.floor(pointsState.streak / 4); // Bonus and shit
+    const bonusPoints = Math.floor(pointsState.streak / 4);
     const totalPoints = basePoints + bonusPoints;
     
     pointsState.score += totalPoints;
@@ -205,7 +197,7 @@ function updateScoreDisplay() {
         scoreElement.textContent = pointsState.score;
         
         scoreElement.classList.remove('score-change');
-        void scoreElement.offsetWidth; // Force reflow
+        void scoreElement.offsetWidth;
         scoreElement.classList.add('score-change');
     }
     
@@ -216,8 +208,7 @@ function updateScoreDisplay() {
     } else if (streakElement) {
         streakElement.style.display = 'none';
     }
-    
-    // 69 achievement, you're a noice person if you're reading this ;)
+
     if (pointsState.score === 69 && !pointsState.achieved69) {
         pointsState.achieved69 = true;
         trigger69Achievement();
@@ -239,7 +230,6 @@ function showBonusIndicator(bonus) {
     }
 }
 
-// Just for console
 function trigger69Achievement() {
     
     isPaused = true;
@@ -310,12 +300,10 @@ function restartGame() {
     console.log('Game restarted!');
 }
 
-// Collision detection
 function detectCollision(car1, car2) {
     const carWidth = 40;
     const carHeight = 25;
     
-    // Get bounding boxes
     const box1 = {
         x: car1.position.x,
         y: car1.position.y,
@@ -339,8 +327,6 @@ function detectCollision(car1, car2) {
     
     if (overlapPercentage <= 0.5) return false;
     
-    // ONLY consider it a valid crash if collision is in area
-    // Adding this cuz cars overlapping in spawn were acting up, gotta teach em a lesson
     const intersectionBounds = {
         left: 240,
         right: 360,
@@ -348,7 +334,6 @@ function detectCollision(car1, car2) {
         bottom: 360
     };
     
-    // Check for car is at least partially in the intersection, just for countermeasure
     const car1InIntersection = (
         box1.x < intersectionBounds.right &&
         box1.x + box1.width > intersectionBounds.left &&
@@ -379,7 +364,6 @@ function checkForCollisions() {
     }
 }
 
-// crash sequence
 function triggerCrash(crashedCars) {
     crashState.active = true;
     crashState.crashedCars = crashedCars;
@@ -474,7 +458,6 @@ function updateRecoveryState() {
 }
 
 function shouldStop(car, predictedSpeed = null) {
-    // N/S cars observe far-side light to simulate real traffic signal placement
     const observedLightForDirection = (dir => {
         if (dir === 'north') return 'south';
         if (dir === 'south') return 'north';
@@ -526,24 +509,21 @@ function moveCars() {
         return;
     }
     
-    // ascending order for cars count
     Object.keys(lanes).forEach(direction => {
         const laneCars = lanes[direction];
         
-        // Sort by path progress: higher pathSegment = further ahead, then by position within segment
+
         laneCars.sort((a, b) => {
             if (a.pathSegment !== b.pathSegment) {
                 return b.pathSegment - a.pathSegment;
             }
             
-            // If on same segment, sort by position along current axis AND direction of travel
             const aAxis = Array.isArray(a.config.axis) ? a.config.axis[a.pathSegment] : a.config.axis;
             const bAxis = Array.isArray(b.config.axis) ? b.config.axis[b.pathSegment] : b.config.axis;
             
             const aPos = aAxis === 'x' ? a.position.x : a.position.y;
             const bPos = bAxis === 'x' ? b.position.x : b.position.y;
 
-            // Determine actual direction of movement based on path
             const aNextPoint = a.config.points[a.pathSegment + 1];
             const bNextPoint = b.config.points[b.pathSegment + 1];
             
@@ -560,7 +540,6 @@ function moveCars() {
                 }
             }
 
-            // Fallback
             if (direction === 'east') return bPos - aPos;
             if (direction === 'west') return aPos - bPos;
             if (direction === 'north') return bPos - aPos;
@@ -575,14 +554,10 @@ function moveCars() {
 
             car.targetSpeed = car.baseSpeed;
             
-            // spacing and stuff b/w cars
             if (frontCar) {
-                // calc actual distance between cars using euclidean distance
                 const dx = frontCar.position.x - car.position.x;
                 const dy = frontCar.position.y - car.position.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-
-                // sometimes I overcomment stuff, then review the comments to make sure that 'is it really needed?'
                 const effectiveGap = (frontCar.pathSegment > 0 || car.pathSegment > 0) 
                     ? car.desiredGap * 1.3 
                     : car.desiredGap;
@@ -677,7 +652,6 @@ function moveCars() {
     });
 }
 
-// Hysteresis prevents spawn flickering at threshold boundary
 function updateLaneSpawnFlag(direction) {
     const count = lanes[direction].length;
     if (count > 6) {
@@ -687,7 +661,6 @@ function updateLaneSpawnFlag(direction) {
     }
 }
 
-// Syncs DOM state with data state on load
 function initializeTrafficLights() {
     for (const direction in trafficLights) {
         const lightElement = document.querySelector(`.traffic-light.${direction}`);
@@ -714,7 +687,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Dynamic spawn rate
+// Spwan rate
 function calculateSpawnInterval() {
     const baseInterval = 2000;
     const minInterval = 500;
@@ -740,7 +713,6 @@ function updateSpawnRate() {
     }
 }
 
-// Randomness and interval prevent uniform traffic patterns
 function startCarSpawning() {
     if (spawnIntervalId) clearInterval(spawnIntervalId);
     
