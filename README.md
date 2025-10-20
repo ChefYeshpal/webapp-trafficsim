@@ -82,7 +82,7 @@ Although, it will probably be much much simpler, with less logic involved as I c
     - Added a initial dialogue box to explain how the game works
     - Added dynamic spawn rates, depend on your score really
 
-## Last thing's last...
+## For the reviewers...
 
 Okay, so I'm learning how to properly comment in my code, and I really wanna thank i-am-unknown-81514525 for telling me **how** to actually comment on code, previously I was going on the philosophy of "what this does", but from now on I will change it to the philosophy of "why I'm doing this". 
 
@@ -94,6 +94,5 @@ Another thing to address was, when you check the commit history, you may see 2 n
 
 ## Where was ai used?
 
-- For the css in the point system, I just couldn't colour match things at the last moment...
-- For the end game screen css, same excuse
+- Originally I used AI in the css part, but after getting a warning from stonemasons I've re-written most of the css myself again
 - I think this constitutes for less than 30% of the overall code, considering how it's all just css
