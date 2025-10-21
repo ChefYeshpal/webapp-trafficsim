@@ -1,8 +1,12 @@
 # webapp-trafficsim
 A traffic light manager simulator
 
-This project is for week 6 of [siege](https://siege.hackclub.com), with the theme being "Signal". The initial idea is to make something akin to ["intersection controller"](https://play.google.com/store/apps/details?id=se.shadowtree.software.trafficbuilder&hl=en_GB&pli=1).
+This project is for week 6 of [siege](https://siege.hackclub.com), with the theme being "Signal". The initial idea is to make something akin to [intersection controller](https://play.google.com/store/apps/details?id=se.shadowtree.software.trafficbuilder&hl=en_GB&pli=1).
 Although, it will probably be much much simpler, with less logic involved as I currently dont have much knowledge in how to add driving logic to something that's on web. The reason why I prefer making things that can be displayed on web is, because it is much much simpler to test and deploy it in such a way that other's can test it as welll (looking at you stonemasons ;D)
+
+## For the user:
+ 
+You are a traffic signal operator, what you do is control the traffic. Your job is to make sure that there isn't a pileup or crashes. Each car that crosses the game boundry, gives you one point, and if multiple exit in a certain amount of time then you will get bonuses and multipliers. For every crash, 5 points are deducted, and if your points go into the negative then it's game over ;-;b
 
 ## Demo
 
@@ -100,3 +104,28 @@ Another thing to address was, when you check the commit history, you may see 2 n
 ## Update: Regarding the AI issue
 
 I was told that the css looked very much "AI like" and there was some code in the JS which they think was AI generated, because of that I have changed the css, and also removed some of the js logic (not a lot though). I hope this is enough for the reviewers to consider this project to be less than 30% AI, even though I haven't used it as much.
+
+## Tech Stuff
+
+No external libraries are used in this project, and it's really mostly barebones js and css
+
+### About the js files:
+
+- script.js
+    - Contains the main code, rest is just there so that I could manage the menial tasks easily and so that this entire project doesn't look like it's only 3 files
+    - Functions: Colour selector for cars, path selector for cars, spawning logic, and score/point logic
+- path.js
+    - Contains the x and y co-ordinates that the cars should take, basically mapping out a path for them 
+- responses.js
+    - Just contains endgame responses, added this as a caviat for the game because I couldn't find a way to get an easter egg in
+
+### Basic stuff
+
+- Game loop
+    - The game loop is managed using `setInterval` and event listeners, state is tracked using js objects for traffic lights, cars, points, and crashes
+- DOM changes
+    - Using methods like `querySelector`, `getElementById`, and event handlers for user interaction like for toggling the traffic lights
+- Debugging
+    - I've also added some console log messages, only because I think it would help in pointing out problems. And also because I like reading the console messages, makes me seem like a hackerman
+
+I dont really know what else to add, I added this because a reviewer suggested to add a full tech stack to my future readmes about how I built my projects. I'll search up on it more for my upcoming project
